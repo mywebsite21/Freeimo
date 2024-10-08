@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ইমো সার্ভিসিং - ১৮+</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            overflow-y: scroll;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            margin: 50px auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #007bff;
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #555;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 16px;
+            display: block;
+            margin-top: 10px;
+            text-align: left;
+            color: #444;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        select:focus, input:focus {
+            border: 1px solid #007bff;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .payment-info {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .image-option {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .image-option img {
+            width: 100px; /* Increase image size */
+            height: 100px; /* Increase image size */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .image-option input[type="radio"] {
+            display: none;
+        }
+
+        .image-option label {
+            display: block;
+            color: #333;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .image-option input[type="radio"]:checked + label img {
+            border: 2px solid #007bff; /* Highlight selected image */
+            box-shadow: 0 4px 10px rgba(0, 123, 255, 0.5);
+        }
+
+        .image-option input[type="radio"]:checked + label {
+            color: #007bff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>ইমো সার্ভিসিং - ১৮+</h1>
+
+    <div class="payment-info">
+        টাকা পাঠান বিকাশ/নগদ নম্বরে: <br>
+        <strong>8801704841743</strong>
+    </div>
+
+    <h2>৫০০ টাকায় ১ ঘন্টা | ৩০০ টাকায় ৩০ মিনিট | ১ রাত ১৫০০ টাকা</h2>
+
+    <form id="serviceForm">
+        <label for="amount">টাকার পরিমাণ নির্বাচন করুন:</label>
+        <select id="amount" name="amount" required>
+            <option value="">টাকার পরিমাণ নির্বাচন করুন</option>
+            <option value="500">৫০০ টাকা</option>
+            <option value="300">৩০০ টাকা</option>
+            <option value="1500">১৫০০ টাকা</option>
+        </select>
+
+        <label for="hours">সময়কাল:</label>
+        <select id="hours" name="hours" required>
+            <option value="">প্রথমে টাকার পরিমাণ নির্বাচন করুন</option>
+        </select>
+
+        <!-- ছবি সিলেকশন অপশন -->
+        <label for="imageSelect">একটি ছবি নির্বাচন করুন:</label>
+        <div class="image-option">
+            <input type="radio" id="image1" name="selectedImage" value="Image 1" required>
+            <label for="image1">
+                <img src="https://i.postimg.cc/FHrxRfwY/9841926749b0c0b4aaee3edce188828c.jpg" alt="Image 1">
+               সাদিয়া
+            </label>
+
+            <input type="radio" id="image2" name="selectedImage" value="">
+            <label for="image2">
+                <img src="https://i.postimg.cc/YSVNbd0F/69f0c2f5d9cae4719de993afc26afaf1.jpg" alt="Image 2">
+                লিমা আক্তার 
+            </label>
+
+            <input type="radio" id="image3" name="selectedImage" value="Image 3">
+            <label for="image3">
+                <img src="https://i.postimg.cc/CLYGPBhc/7a8721a346d0a28efbccb02a029ad49c.jpg" alt="Image 3">
+                মিম আক্তার
+            </label>
+        </div>
+
+        <label for="name">নাম:</label>
+        <input type="text" id="name" name="name" placeholder="আপনার নাম" required>
+
+        <label for="imoPhone">ইমো কলের জন্য নম্বর:</label>
+        <input type="text" id="imoPhone" name="imoPhone" placeholder="ইমো নম্বর" required>
+
+        <button type="submit">সাবমিট করুন</button>
+    </form>
+
+    <div class="message" id="message">
+        <!-- সাবমিশনের পর বার্তা এখানে দেখাবে -->
+    </div>
+</div>
+
+<script>
+    document.getElementById('amount').addEventListener('change', function() {
+        var amount = this.value;
+        var hoursSelect = document.getElementById('hours');
+
+        // পুরানো অপশনগুলি পরিষ্কার করুন
+        hoursSelect.innerHTML = '';
+
+        if (amount === '500') {
+            var option = document.createElement('option');
+            option.value = '1 ঘন্টা';
+            option.text = '১ ঘন্টা';
+            hoursSelect.appendChild(option);
+        } else if (amount === '300') {
+            var option = document.createElement('option');
+            option.value = '30 মিনিট';
+            option.text = '৩০ মিনিট';
+            hoursSelect.appendChild(option);
+        } else if (amount === '1500') {
+            var option = document.createElement('option');
+            option.value = '১ রাত';
+            option.text = '১ রাত';
+            hoursSelect.appendChild(option);
+        } else {
+            var option = document.createElement('option');
+            option.value = '';
+            option.text = 'প্রথমে টাকার পরিমাণ নির্বাচন করুন';
+            hoursSelect.appendChild(option);
+        }
+    });
+
+    document.getElementById('serviceForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        // ব্যবহারকারীর ইনপুট থেকে ডেটা সংগ্রহ করা
+        var amount = document.getElementById('amount').value;
+        var hours = document.getElementById('hours').value;
+        var image = document.querySelector('input[name="selectedImage"]:checked').value;
+        var name = document.getElementById('name').value;
+        var imoPhone = document.getElementById('imoPhone').value;
+
+        // একটি বার্তা দেখানো
+        document.getElementById('message').innerText = `আপনার তথ্য সাবমিট করা হয়েছে:\nটাকার পরিমাণ: ${amount} টাকা\nসময়কাল: ${hours}\nনির্বাচিত ছবি: ${image}\nনাম: ${name}\nইমো নম্বর: ${imoPhone}\n\nআপনি যদি টাকা পাঠিয়ে থাকেন তাহলে ৫ মিনিটের মধ্যে আপনার ইমো নাম্বারে আপনাকে ভিডিও কল করা হবে।`;
+    });
+</script>
+
+</body>
+</html>
