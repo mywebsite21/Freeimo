@@ -66,6 +66,13 @@
     }
     .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4); }
     
+    .btn-warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+      transition: all 0.3s;
+    }
+    .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4); }
+    
     .stat-card {
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
@@ -161,6 +168,21 @@
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
     }
+    
+    .pending-banner {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border: 2px solid #f59e0b;
+      animation: pulseBanner 2s infinite;
+    }
+    @keyframes pulseBanner {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+    }
+    
+    .refresh-spin {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     
     .mobile-menu-btn { display: none; }
     .mobile-actions-menu {
@@ -270,6 +292,22 @@
     <div class="absolute top-0 left-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
     <div class="absolute bottom-0 right-0 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style="animation-delay: 1s;"></div>
 
+    <!-- PENDING APPROVAL BANNER -->
+    <div id="pending-banner" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[60] pending-banner rounded-2xl px-5 py-3 md:px-6 md:py-4 shadow-2xl max-w-md w-[90vw] md:w-auto text-center">
+      <div class="flex items-center justify-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-hourglass-half text-white text-lg"></i>
+        </div>
+        <div class="text-left">
+          <p class="font-bold text-amber-900 text-sm md:text-base">রেজিস্ট্রেশন সফল হয়েছে! ✅</p>
+          <p class="text-amber-800 text-xs md:text-sm mt-0.5">Master Admin অ্যাপ্রুভ করার জন্য অপেক্ষা করুন ⏳</p>
+        </div>
+        <button onclick="document.getElementById('pending-banner').classList.add('hidden')" class="text-amber-700 hover:text-amber-900 ml-2 flex-shrink-0">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
     <div class="glass-card rounded-3xl shadow-2xl w-full max-w-md p-6 md:p-10 relative z-10 border border-white/30">
       <div class="flex flex-col items-center mb-8">
         <div class="w-20 h-20 rounded-2xl gradient-bg-2 flex items-center justify-center mb-4 shadow-lg">
@@ -324,6 +362,9 @@
           </div>
         </div>
         <div class="flex items-center gap-2 md:gap-3">
+          <button id="normal-refresh-btn" class="btn-warning text-white px-3 md:px-4 py-2 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm flex items-center gap-1 md:gap-2">
+            <i id="normal-refresh-icon" class="fas fa-sync-alt"></i><span class="hidden md:inline">Refresh</span>
+          </button>
           <button class="logout-btn btn-danger text-white px-3 md:px-5 py-2 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm">
             <i class="fas fa-sign-out-alt mr-1 md:mr-2"></i><span class="hidden md:inline">Logout</span>
           </button>
@@ -508,6 +549,9 @@
               </div>
             </div>
             <div class="flex items-center gap-2">
+              <button id="master-refresh-btn" class="btn-warning text-white px-3 md:px-4 py-2 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm flex items-center gap-1 md:gap-2">
+                <i id="master-refresh-icon" class="fas fa-sync-alt"></i><span class="hidden sm:inline">Refresh All</span>
+              </button>
               <span class="badge-pill bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 text-xs md:text-sm">
                 <i class="fas fa-crown"></i> <span class="hidden sm:inline">Master</span>
               </span>
@@ -706,7 +750,6 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
     
-    // ✅ MASTER ADMIN EMAIL - Only this email can access master panel
     const MASTER_ADMIN_EMAIL = 'pinakchakraborty626@gmail.com';
 
     let currentAdminDoc = null;
@@ -716,6 +759,7 @@
     let masterMembersList = [];
     let adminTelegramMap = {};
     let currentModalSlug = null;
+    let isProcessingAuth = false; // ✅ Prevents race conditions
 
     function showToast(message, type = 'success') {
       const toast = document.createElement('div');
@@ -730,6 +774,13 @@
         toast.style.transition = 'all 0.3s';
         setTimeout(() => toast.remove(), 300);
       }, 3500);
+    }
+
+    function showView(viewId) {
+      document.getElementById('login-view').classList.add('hidden');
+      document.getElementById('normal-dashboard-view').classList.add('hidden');
+      document.getElementById('master-dashboard-view').classList.add('hidden');
+      if (viewId) document.getElementById(viewId).classList.remove('hidden');
     }
 
     function generateUniqueSlug(email) {
@@ -775,13 +826,14 @@
     });
 
     async function handleAuth(isRegister) {
+      if (isProcessingAuth) return; // ✅ Prevent double-click
+      
       const email = document.getElementById('email').value.trim().toLowerCase();
       const pass = document.getElementById('password').value;
       
       if (!email || !pass) return showToast('Email এবং Password প্রয়োজন', 'error');
       if (pass.length < 6) return showToast('Password কমপক্ষে ৬ অক্ষরের হতে হবে', 'error');
       
-      // 🔒 MASTER ADMIN CHECK - Only specific email can login as master
       if (isMasterLoginMode && email !== MASTER_ADMIN_EMAIL) {
         return showToast(`❌ Master Admin access denied!\nOnly ${MASTER_ADMIN_EMAIL} can login as Master Admin.`, 'error');
       }
@@ -789,113 +841,217 @@
       const btn = document.getElementById(isRegister ? 'register-btn' : 'login-btn');
       const originalHTML = btn.innerHTML;
       btn.disabled = true;
+      isProcessingAuth = true;
       btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>অপেক্ষা করুন...';
 
       try {
         let userCred;
         if (isRegister) {
           userCred = await createUserWithEmailAndPassword(auth, email, pass);
-          showToast('অ্যাকাউন্ট তৈরি হয়েছে! Approval-এর জন্য অপেক্ষা করুন।');
-        } else {
-          userCred = await signInWithEmailAndPassword(auth, email, pass);
-          showToast('সফলভাবে লগইন হয়েছে!');
-        }
-        if (isMasterLoginMode) {
-          await setDoc(doc(db, 'admins', userCred.user.uid), { role: 'master' }, { merge: true });
-        }
-      } catch (err) {
-        if(err.code === 'auth/invalid-credential') showToast('ভুল email অথবা password', 'error');
-        else if(err.code === 'auth/email-already-in-use') showToast('এই email দিয়ে আগেই account আছে', 'error');
-        else showToast(err.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
-      }
-    }
-
-    document.getElementById('login-btn').addEventListener('click', () => handleAuth(false));
-    document.getElementById('register-btn').addEventListener('click', () => handleAuth(true));
-    document.querySelectorAll('.logout-btn').forEach(btn => btn.addEventListener('click', () => signOut(auth)));
-
-    async function isSlugExists(slug) {
-      const q = query(collection(db, 'admins'), where('customSlug', '==', slug));
-      const snapshot = await getDocs(q);
-      return !snapshot.empty;
-    }
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        document.getElementById('login-view').classList.add('hidden');
-        const adminRef = doc(db, 'admins', user.uid);
-        const snap = await getDoc(adminRef);
-        
-        if (snap.exists()) {
-          currentAdminDoc = { id: user.uid, ...snap.data() };
           
-          if (!currentAdminDoc.customSlug || currentAdminDoc.customSlug.length < 10) {
-            let newSlug = generateUniqueSlug(user.email);
-            while (await isSlugExists(newSlug)) {
-              newSlug = generateUniqueSlug(user.email);
-            }
-            currentAdminDoc.customSlug = newSlug;
-            await updateDoc(adminRef, { customSlug: newSlug });
-          }
-          
-          if (currentAdminDoc.canSearchAll === undefined) {
-            currentAdminDoc.canSearchAll = false;
-            await updateDoc(adminRef, { canSearchAll: false });
-          }
-          
-        } else {
-          let newSlug = generateUniqueSlug(user.email);
+          // ✅ Create admin doc immediately during registration
+          const adminRef = doc(db, 'admins', userCred.user.uid);
+          let newSlug = generateUniqueSlug(email);
           while (await isSlugExists(newSlug)) {
-            newSlug = generateUniqueSlug(user.email);
+            newSlug = generateUniqueSlug(email);
           }
           
-          currentAdminDoc = {
-            id: user.uid, 
-            email: user.email, 
+          await setDoc(adminRef, {
+            email: email,
             role: 'normal',
-            isBlocked: false, 
-            isApproved: false, 
+            isBlocked: false,
+            isApproved: false,
             canSearchAll: false,
             canChangeTelegramLink: false,
             customSlug: newSlug,
             telegramLink: '',
             createdAt: new Date()
-          };
-          await setDoc(adminRef, currentAdminDoc);
-        }
-
-        if (currentAdminDoc.role !== 'master') {
-          if (!currentAdminDoc.isApproved) {
-            showToast('আপনার account এখনও Approved হয়নি', 'error');
-            await signOut(auth); return;
-          }
-          if (currentAdminDoc.isBlocked) {
-            showToast('আপনার account Blocked করা হয়েছে', 'error');
-            await signOut(auth); return;
-          }
-        }
-
-        if (currentAdminDoc.role === 'master') {
-          document.getElementById('master-dashboard-view').classList.remove('hidden');
-          document.getElementById('normal-dashboard-view').classList.add('hidden');
-          document.getElementById('master-email').innerText = user.email;
-          loadMasterData();
+          });
+          
+          // ✅ Sign out immediately and show pending banner
+          await signOut(auth);
+          isProcessingAuth = false;
+          btn.disabled = false;
+          btn.innerHTML = originalHTML;
+          
+          // Show pending banner on login page
+          document.getElementById('pending-banner').classList.remove('hidden');
+          document.getElementById('login-form').reset();
+          showToast('রেজিস্ট্রেশন সফল! অ্যাপ্রুভালের জন্য অপেক্ষা করুন।', 'success');
+          return; // ✅ Exit early - don't let onAuthStateChanged handle it
+          
         } else {
-          document.getElementById('normal-dashboard-view').classList.remove('hidden');
-          document.getElementById('master-dashboard-view').classList.add('hidden');
-          document.getElementById('normal-user-email').innerText = user.email;
-          setupNormalDashboard();
+          userCred = await signInWithEmailAndPassword(auth, email, pass);
+          showToast('সফলভাবে লগইন হয়েছে!');
         }
+        
+        if (isMasterLoginMode && userCred) {
+          await setDoc(doc(db, 'admins', userCred.user.uid), { role: 'master' }, { merge: true });
+        }
+      } catch (err) {
+        if(err.code === 'auth/invalid-credential') showToast('ভুল email অথবা password', 'error');
+        else if(err.code === 'auth/email-already-in-use') showToast('এই email দিয়ে আগেই account আছে', 'error');
+        else if(err.code === 'auth/network-request-failed') showToast('নেটওয়ার্ক সমস্যা! আবার চেষ্টা করুন।', 'error');
+        else showToast(err.message || 'একটি সমস্যা হয়েছে', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+        isProcessingAuth = false;
+      }
+    }
+
+    document.getElementById('login-btn').addEventListener('click', () => handleAuth(false));
+    document.getElementById('register-btn').addEventListener('click', () => handleAuth(true));
+    document.querySelectorAll('.logout-btn').forEach(btn => btn.addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        showView('login-view');
+        currentAdminDoc = null;
+      } catch(e) {
+        showToast('Logout সমস্যা', 'error');
+      }
+    }));
+
+    async function isSlugExists(slug) {
+      try {
+        const q = query(collection(db, 'admins'), where('customSlug', '==', slug));
+        const snapshot = await getDocs(q);
+        return !snapshot.empty;
+      } catch(e) {
+        return false;
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      // ✅ Skip if we just registered (handled in handleAuth)
+      if (isProcessingAuth) return;
+      
+      if (user) {
+        try {
+          const adminRef = doc(db, 'admins', user.uid);
+          const snap = await getDoc(adminRef);
+          
+          if (snap.exists()) {
+            currentAdminDoc = { id: user.uid, ...snap.data() };
+            
+            // Ensure slug exists
+            if (!currentAdminDoc.customSlug || currentAdminDoc.customSlug.length < 10) {
+              let newSlug = generateUniqueSlug(user.email);
+              while (await isSlugExists(newSlug)) {
+                newSlug = generateUniqueSlug(user.email);
+              }
+              currentAdminDoc.customSlug = newSlug;
+              await updateDoc(adminRef, { customSlug: newSlug });
+            }
+            
+            if (currentAdminDoc.canSearchAll === undefined) {
+              currentAdminDoc.canSearchAll = false;
+              await updateDoc(adminRef, { canSearchAll: false });
+            }
+            
+            if (currentAdminDoc.canChangeTelegramLink === undefined) {
+              currentAdminDoc.canChangeTelegramLink = false;
+              await updateDoc(adminRef, { canChangeTelegramLink: false });
+            }
+            
+          } else {
+            // ✅ Doc doesn't exist - create it (for master admin or edge cases)
+            let newSlug = generateUniqueSlug(user.email);
+            while (await isSlugExists(newSlug)) {
+              newSlug = generateUniqueSlug(user.email);
+            }
+            
+            const isMaster = (user.email.toLowerCase() === MASTER_ADMIN_EMAIL);
+            
+            currentAdminDoc = {
+              id: user.uid, 
+              email: user.email, 
+              role: isMaster ? 'master' : 'normal',
+              isBlocked: false, 
+              isApproved: isMaster ? true : false, 
+              canSearchAll: false,
+              canChangeTelegramLink: false,
+              customSlug: newSlug,
+              telegramLink: '',
+              createdAt: new Date()
+            };
+            await setDoc(adminRef, currentAdminDoc);
+          }
+
+          // ✅ Check permissions for normal admins
+          if (currentAdminDoc.role !== 'master') {
+            if (!currentAdminDoc.isApproved) {
+              showToast('আপনার account এখনও Approved হয়নি। Master Admin কে জানান।', 'error');
+              await signOut(auth);
+              showView('login-view');
+              document.getElementById('pending-banner').classList.remove('hidden');
+              currentAdminDoc = null;
+              return;
+            }
+            if (currentAdminDoc.isBlocked) {
+              showToast('আপনার account Blocked করা হয়েছে', 'error');
+              await signOut(auth);
+              showView('login-view');
+              currentAdminDoc = null;
+              return;
+            }
+          }
+
+          // ✅ Route to correct dashboard
+          if (currentAdminDoc.role === 'master') {
+            showView('master-dashboard-view');
+            document.getElementById('master-email').innerText = user.email;
+            loadMasterData();
+          } else {
+            showView('normal-dashboard-view');
+            document.getElementById('normal-user-email').innerText = user.email;
+            setupNormalDashboard();
+          }
+          
+        } catch (err) {
+          console.error('Auth state error:', err);
+          showToast('ড্যাশবোর্ড লোড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'error');
+          await signOut(auth).catch(() => {});
+          showView('login-view');
+          currentAdminDoc = null;
+        }
+        
       } else {
-        document.getElementById('login-view').classList.remove('hidden');
-        document.getElementById('normal-dashboard-view').classList.add('hidden');
-        document.getElementById('master-dashboard-view').classList.add('hidden');
+        // ✅ User signed out - always show login
+        showView('login-view');
         document.getElementById('login-form').reset();
         currentAdminDoc = null;
       }
+    });
+
+    // ✅ REFRESH BUTTONS
+    document.getElementById('normal-refresh-btn').addEventListener('click', async () => {
+      const icon = document.getElementById('normal-refresh-icon');
+      icon.classList.add('refresh-spin');
+      try {
+        // Reload admin doc for latest permissions
+        const snap = await getDoc(doc(db, 'admins', currentAdminDoc.id));
+        if (snap.exists()) {
+          currentAdminDoc = { id: currentAdminDoc.id, ...snap.data() };
+        }
+        await setupNormalDashboard();
+        showToast('ডাটা রিফ্রেশ হয়েছে! ✅');
+      } catch(e) {
+        showToast('রিফ্রেশ সমস্যা', 'error');
+      }
+      setTimeout(() => icon.classList.remove('refresh-spin'), 800);
+    });
+
+    document.getElementById('master-refresh-btn').addEventListener('click', async () => {
+      const icon = document.getElementById('master-refresh-icon');
+      icon.classList.add('refresh-spin');
+      try {
+        await loadMasterData();
+        showToast('সব ডাটা রিফ্রেশ হয়েছে! ✅');
+      } catch(e) {
+        showToast('রিফ্রেশ সমস্যা', 'error');
+      }
+      setTimeout(() => icon.classList.remove('refresh-spin'), 800);
     });
 
     async function setupNormalDashboard() {
@@ -978,6 +1134,7 @@
         
         renderNormalMembers('');
       } catch(e) { 
+        console.error('Load members error:', e);
         showToast('Members লোড করতে সমস্যা', 'error'); 
       }
     }
@@ -1105,35 +1262,46 @@
         renderMasterAdmins();
         renderMasterMembers('');
         renderStatsBreakdown();
-      } catch (e) { showToast('Data লোড করতে সমস্যা', 'error'); }
+      } catch (e) { 
+        console.error('Load master data error:', e);
+        showToast('Data লোড করতে সমস্যা', 'error'); 
+      }
     }
 
     window.toggleAdminApproval = async function(uid, isApproved) {
       if(!confirm(`${isApproved ? 'Unapprove' : 'Approve'} করবেন?`)) return;
-      await updateDoc(doc(db, 'admins', uid), { isApproved: !isApproved });
-      showToast(`Admin ${!isApproved ? 'Approved' : 'Unapproved'}!`);
-      loadMasterData();
+      try {
+        await updateDoc(doc(db, 'admins', uid), { isApproved: !isApproved });
+        showToast(`Admin ${!isApproved ? 'Approved' : 'Unapproved'}!`);
+        loadMasterData();
+      } catch(e) { showToast('Error: ' + e.message, 'error'); }
     };
 
     window.toggleAdminBlock = async function(uid, isBlocked) {
       if(!confirm(`${isBlocked ? 'Unblock' : 'Block'} করবেন?`)) return;
-      await updateDoc(doc(db, 'admins', uid), { isBlocked: !isBlocked });
-      showToast(`Admin ${!isBlocked ? 'Blocked' : 'Unblocked'}!`);
-      loadMasterData();
+      try {
+        await updateDoc(doc(db, 'admins', uid), { isBlocked: !isBlocked });
+        showToast(`Admin ${!isBlocked ? 'Blocked' : 'Unblocked'}!`);
+        loadMasterData();
+      } catch(e) { showToast('Error: ' + e.message, 'error'); }
     };
 
     window.toggleSearchPerm = async function(uid, canSearchAll) {
       const action = !canSearchAll ? 'GRANT Global Search' : 'REVOKE Global Search';
       if(!confirm(`আপনি কি এই অ্যাডমিনকে ${action} permission দিতে চান?\n\n⚠️ Global Search দিলে সে সব অ্যাডমিনের মেম্বার দেখতে পারবে!`)) return;
-      await updateDoc(doc(db, 'admins', uid), { canSearchAll: !canSearchAll });
-      showToast(`Search ${!canSearchAll ? 'Granted' : 'Revoked'}!`);
-      loadMasterData();
+      try {
+        await updateDoc(doc(db, 'admins', uid), { canSearchAll: !canSearchAll });
+        showToast(`Search ${!canSearchAll ? 'Granted' : 'Revoked'}!`);
+        loadMasterData();
+      } catch(e) { showToast('Error: ' + e.message, 'error'); }
     };
 
     window.toggleLinkEditPerm = async function(uid, canChangeTelegramLink) {
-      await updateDoc(doc(db, 'admins', uid), { canChangeTelegramLink: !canChangeTelegramLink });
-      showToast(`Link Edit ${!canChangeTelegramLink ? 'Granted' : 'Revoked'}!`);
-      loadMasterData();
+      try {
+        await updateDoc(doc(db, 'admins', uid), { canChangeTelegramLink: !canChangeTelegramLink });
+        showToast(`Link Edit ${!canChangeTelegramLink ? 'Granted' : 'Revoked'}!`);
+        loadMasterData();
+      } catch(e) { showToast('Error: ' + e.message, 'error'); }
     };
 
     window.viewAdminMembers = function(slug, email) {
@@ -1213,10 +1381,12 @@
 
     window.deleteMember = async function(memberId) {
       if(!confirm('এই member কে delete করবেন?')) return;
-      await deleteDoc(doc(db, 'members', memberId));
-      showToast('Member deleted!');
-      loadMasterData();
-      if(currentModalSlug) renderModalMembers(document.getElementById('modal-search-input').value);
+      try {
+        await deleteDoc(doc(db, 'members', memberId));
+        showToast('Member deleted!');
+        loadMasterData();
+        if(currentModalSlug) renderModalMembers(document.getElementById('modal-search-input').value);
+      } catch(e) { showToast('Error: ' + e.message, 'error'); }
     };
 
     window.exportAdminMembers = function(slug) {
@@ -1271,12 +1441,12 @@
             </div>
           </td>
           <td class="px-3 md:px-4 py-4" data-label="Search">
-            <button onclick="toggleSearchPerm('${a.id}', ${a.canSearchAll})" class="text-xs font-semibold px-3 py-1.5 rounded-lg transition ${a.canSearchAll ? 'bg-rose-100 text-rose-700 hover:bg-rose-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+            <button onclick="toggleSearchPerm('${a.id}', ${a.canSearchAll || false})" class="text-xs font-semibold px-3 py-1.5 rounded-lg transition ${a.canSearchAll ? 'bg-rose-100 text-rose-700 hover:bg-rose-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
               <i class="fas fa-${a.canSearchAll ? 'globe' : 'lock'} mr-1"></i>${a.canSearchAll ? 'Global' : 'Own'}
             </button>
           </td>
           <td class="px-3 md:px-4 py-4" data-label="Link Edit">
-            <button onclick="toggleLinkEditPerm('${a.id}', ${a.canChangeTelegramLink})" class="text-xs font-semibold px-3 py-1.5 rounded-lg transition ${a.canChangeTelegramLink ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+            <button onclick="toggleLinkEditPerm('${a.id}', ${a.canChangeTelegramLink || false})" class="text-xs font-semibold px-3 py-1.5 rounded-lg transition ${a.canChangeTelegramLink ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
               <i class="fas fa-${a.canChangeTelegramLink ? 'edit' : 'lock'} mr-1"></i>${a.canChangeTelegramLink ? 'On' : 'Off'}
             </button>
           </td>
@@ -1285,10 +1455,10 @@
               <button onclick="viewAdminMembers('${a.customSlug}', '${a.email}')" class="text-xs font-semibold bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg transition">
                 <i class="fas fa-eye mr-1"></i>View
               </button>
-              <button onclick="toggleAdminApproval('${a.id}', ${a.isApproved})" class="text-xs font-semibold ${a.isApproved ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600'} text-white px-3 py-1.5 rounded-lg transition">
+              <button onclick="toggleAdminApproval('${a.id}', ${a.isApproved || false})" class="text-xs font-semibold ${a.isApproved ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600'} text-white px-3 py-1.5 rounded-lg transition">
                 <i class="fas fa-${a.isApproved ? 'times' : 'check'} mr-1"></i>${a.isApproved ? 'Revoke' : 'Approve'}
               </button>
-              <button onclick="toggleAdminBlock('${a.id}', ${a.isBlocked})" class="text-xs font-semibold ${a.isBlocked ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white px-3 py-1.5 rounded-lg transition">
+              <button onclick="toggleAdminBlock('${a.id}', ${a.isBlocked || false})" class="text-xs font-semibold ${a.isBlocked ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white px-3 py-1.5 rounded-lg transition">
                 <i class="fas fa-${a.isBlocked ? 'unlock' : 'ban'} mr-1"></i>${a.isBlocked ? 'Unblock' : 'Block'}
               </button>
               <button onclick="exportAdminMembers('${a.customSlug}')" class="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition">
@@ -1303,10 +1473,10 @@
                 <button onclick="viewAdminMembers('${a.customSlug}', '${a.email}'); document.getElementById('${uniqueMenuId}').classList.remove('show')" class="text-indigo-600">
                   <i class="fas fa-eye mr-2"></i>View Members
                 </button>
-                <button onclick="toggleAdminApproval('${a.id}', ${a.isApproved}); document.getElementById('${uniqueMenuId}').classList.remove('show')" class="${a.isApproved ? 'text-amber-600' : 'text-emerald-600'}">
+                <button onclick="toggleAdminApproval('${a.id}', ${a.isApproved || false}); document.getElementById('${uniqueMenuId}').classList.remove('show')" class="${a.isApproved ? 'text-amber-600' : 'text-emerald-600'}">
                   <i class="fas fa-${a.isApproved ? 'times' : 'check'} mr-2"></i>${a.isApproved ? 'Revoke Approval' : 'Approve'}
                 </button>
-                <button onclick="toggleAdminBlock('${a.id}', ${a.isBlocked}); document.getElementById('${uniqueMenuId}').classList.remove('show')" class="${a.isBlocked ? 'text-emerald-600' : 'text-rose-600'}">
+                <button onclick="toggleAdminBlock('${a.id}', ${a.isBlocked || false}); document.getElementById('${uniqueMenuId}').classList.remove('show')" class="${a.isBlocked ? 'text-emerald-600' : 'text-rose-600'}">
                   <i class="fas fa-${a.isBlocked ? 'unlock' : 'ban'} mr-2"></i>${a.isBlocked ? 'Unblock' : 'Block'}
                 </button>
                 <button onclick="exportAdminMembers('${a.customSlug}'); document.getElementById('${uniqueMenuId}').classList.remove('show')" class="text-slate-600 border-t border-slate-200 mt-1 pt-2">
