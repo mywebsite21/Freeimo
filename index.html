@@ -1,69 +1,1430 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forex Trading</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>FX Group - Admin Panel</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Inter', 'Hind Siliguri', sans-serif; }
+    body { background: #f1f5f9; }
+    
+    .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .gradient-bg-2 { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%); }
+    
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .sidebar-gradient {
+      background: linear-gradient(180deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%);
+    }
+    
+    .nav-link {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .nav-link::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, #a78bfa, #ec4899);
+      transform: scaleY(0);
+      transition: transform 0.3s;
+    }
+    .nav-link.active::before, .nav-link:hover::before { transform: scaleY(1); }
+    .nav-link.active, .nav-link:hover {
+      background: rgba(255,255,255,0.08);
+      transform: translateX(4px);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4); }
+    
+    .btn-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      transition: all 0.3s;
+    }
+    .btn-success:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4); }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+      transition: all 0.3s;
+    }
+    .btn-danger:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4); }
+    
+    .stat-card {
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 100px; height: 100px;
+      background: radial-gradient(circle, rgba(255,255,255,0.2), transparent);
+      border-radius: 50%;
+      transform: translate(30%, -30%);
+    }
+    .stat-card:hover { transform: translateY(-4px); }
+    
+    .table-modern { border-collapse: separate; border-spacing: 0; width: 100%; }
+    .table-modern thead th {
+      background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+      position: sticky; top: 0;
+      z-index: 5;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .table-modern tbody tr { transition: all 0.2s; }
+    .table-modern tbody tr:hover {
+      background: linear-gradient(90deg, rgba(99, 102, 241, 0.04), rgba(139, 92, 246, 0.04));
+    }
+    
+    .input-modern {
+      transition: all 0.3s;
+      border: 2px solid #e2e8f0;
+    }
+    .input-modern:focus {
+      border-color: #8b5cf6;
+      box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+    }
+    
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    
+    .modal-overlay {
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(8px);
+      animation: fadeIn 0.2s;
+    }
+    
+    .modal-content {
+      animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp {
+      from { transform: translateY(20px) scale(0.95); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    
+    .icon-circle {
+      width: 56px; height: 56px;
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+    }
+    
+    .link-display {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 2px dashed #cbd5e1;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      word-break: break-all;
+      color: #6366f1;
+      font-weight: 600;
+      padding: 8px;
+      border-radius: 6px;
+    }
+    
+    .scroll-custom::-webkit-scrollbar { width: 8px; height: 8px; }
+    .scroll-custom::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .scroll-custom::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .scroll-custom::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    .toast-enter { animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+    @keyframes slideInRight {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    .mobile-menu-btn { display: none; }
+    .mobile-actions-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 100%;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      z-index: 50;
+      min-width: 200px;
+      margin-top: 8px;
+      border: 1px solid #e2e8f0;
+      animation: slideDown 0.2s;
+    }
+    .mobile-actions-menu.show { display: block; }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .mobile-actions-menu button {
+      width: 100%;
+      padding: 12px 16px;
+      text-align: left;
+      border: none;
+      background: none;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .mobile-actions-menu button:hover { background: #f1f5f9; }
+    .mobile-actions-menu button:first-child { border-radius: 12px 12px 0 0; }
+    .mobile-actions-menu button:last-child { border-radius: 0 0 12px 12px; }
+    
+    .url-box {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #0369a1;
+      word-break: break-all;
+      display: block;
+      margin-top: 4px;
+    }
+    
+    @media (max-width: 1023px) {
+      .mobile-menu-btn { display: flex; }
+      .sidebar {
+        position: fixed;
+        z-index: 40;
+        transform: translateX(-100%);
+        transition: transform 0.3s;
+        width: 280px;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 39;
+      }
+      .sidebar-overlay.show { display: block; }
+      
+      .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .table-modern thead { display: none; }
+      .table-modern tbody tr {
+        display: block;
+        margin-bottom: 16px;
+        background: white;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
+      }
+      .table-modern tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border: none;
+        text-align: right;
+      }
+      .table-modern tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #64748b;
+        text-align: left;
+        margin-right: auto;
+        padding-right: 16px;
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .mobile-action-btn { display: none !important; }
+    }
+  </style>
 </head>
-<body>
-    <!-- Site Name -->
-    <header>
-        <h1>ফরেক্স ট্রেডিং</h1>
-        
-        <!-- Dark/Light Mode Toggle Switch -->
-        <div class="mode-toggle">
-            <label for="modeSwitch">Dark Mode</label>
-            <input type="checkbox" id="modeSwitch" class="mode-switch">
+<body class="min-h-screen">
+
+  <div id="toast-container" class="fixed top-6 right-6 z-[100] flex flex-col gap-3 max-w-sm"></div>
+
+  <!-- LOGIN VIEW -->
+  <div id="login-view" class="min-h-screen gradient-bg-2 flex items-center justify-center px-4 relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
+    <div class="absolute bottom-0 right-0 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse" style="animation-delay: 1s;"></div>
+
+    <div class="glass-card rounded-3xl shadow-2xl w-full max-w-md p-6 md:p-10 relative z-10 border border-white/30">
+      <div class="flex flex-col items-center mb-8">
+        <div class="w-20 h-20 rounded-2xl gradient-bg-2 flex items-center justify-center mb-4 shadow-lg">
+          <i class="fas fa-shield-alt text-4xl text-white"></i>
         </div>
+        <h2 id="login-title" class="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent text-center">FX Group</h2>
+        <p class="text-slate-500 text-sm mt-1">Admin Dashboard Login</p>
+        
+        <button type="button" id="toggle-mode-btn" class="mt-4 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 px-4 py-2 rounded-full transition-all border border-purple-200">
+          <i class="fas fa-exchange-alt mr-1"></i>Switch to Master Admin
+        </button>
+      </div>
+      
+      <form id="login-form" class="space-y-5">
+        <div>
+          <label class="block text-slate-700 text-sm font-semibold mb-2">
+            <i class="fas fa-envelope mr-1 text-indigo-500"></i> Email Address
+          </label>
+          <input type="email" id="email" class="input-modern w-full px-4 py-3 rounded-xl bg-white" placeholder="admin@example.com" required>
+        </div>
+        
+        <div>
+          <label class="block text-slate-700 text-sm font-semibold mb-2">
+            <i class="fas fa-lock mr-1 text-indigo-500"></i> Password
+          </label>
+          <input type="password" id="password" class="input-modern w-full px-4 py-3 rounded-xl bg-white" placeholder="••••••••" required>
+        </div>
+
+        <div class="space-y-3 pt-2">
+          <button type="button" id="login-btn" class="btn-primary w-full text-white font-bold py-3.5 rounded-xl">
+            <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+          </button>
+          <button type="button" id="register-btn" class="btn-success w-full text-white font-bold py-3.5 rounded-xl">
+            <i class="fas fa-user-plus mr-2"></i>Register New Admin
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- NORMAL ADMIN DASHBOARD -->
+  <div id="normal-dashboard-view" class="min-h-screen flex flex-col hidden">
+    <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-30">
+      <div class="px-4 md:px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3 md:gap-4">
+          <div class="w-10 h-10 md:w-11 md:h-11 rounded-xl gradient-bg flex items-center justify-center shadow-md">
+            <i class="fas fa-user-shield text-white text-lg"></i>
+          </div>
+          <div>
+            <h1 class="text-base md:text-lg font-bold text-slate-800">Admin Dashboard</h1>
+            <p id="normal-user-email" class="text-xs text-slate-500 hidden md:block">Welcome back</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 md:gap-3">
+          <button class="logout-btn btn-danger text-white px-3 md:px-5 py-2 md:py-2.5 rounded-xl font-semibold text-xs md:text-sm">
+            <i class="fas fa-sign-out-alt mr-1 md:mr-2"></i><span class="hidden md:inline">Logout</span>
+          </button>
+        </div>
+      </div>
     </header>
 
-    <!-- Show/Hide Button (Tick Checkbox) -->
-    <div class="toggle-container">
-        <label for="toggleMenu" class="toggle-label">Hide/Show Menu</label>
-        <input type="checkbox" id="toggleMenu" class="toggle-checkbox">
-    </div>
-
-    <!-- Navigation Menu -->
-    <nav>
-        <ul id="navMenu">
-            <li><a href="#home" class="nav-link">Home</a></li>
-            <li><a href="#about" class="nav-link">About</a></li>
-            <li><a href="#support" class="nav-link">Support</a></li>
-            <li><a href="#offer" class="nav-link">Offer</a></li>
-            <li><a href="#work" class="nav-link">Work</a></li>
-        </ul>
-    </nav>
-
-    <!-- Home Section with Offer Animation -->
-    <section id="home" class="section">
-        <h2>Welcome to Forex Trading</h2>
-        <p>Your gateway to the world of financial trading.</p>
-        <div class="offer" id="offer">
-            <h2>Exclusive Offer: Get Started with Free Demo</h2>
+    <main class="flex-grow p-4 md:p-6 max-w-7xl mx-auto w-full space-y-4 md:space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+        <div class="stat-card bg-white rounded-2xl shadow-sm p-5 md:p-6 border border-slate-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Members</p>
+              <p id="stat-total-members" class="text-2xl md:text-3xl font-extrabold text-slate-800 mt-2">0</p>
+            </div>
+            <div class="icon-circle bg-indigo-100 text-indigo-600 w-12 h-12 md:w-14 md:h-14">
+              <i class="fas fa-users"></i>
+            </div>
+          </div>
         </div>
-    </section>
+        <div class="stat-card bg-white rounded-2xl shadow-sm p-5 md:p-6 border border-slate-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Today</p>
+              <p id="stat-today-members" class="text-2xl md:text-3xl font-extrabold text-slate-800 mt-2">0</p>
+            </div>
+            <div class="icon-circle bg-emerald-100 text-emerald-600 w-12 h-12 md:w-14 md:h-14">
+              <i class="fas fa-chart-line"></i>
+            </div>
+          </div>
+        </div>
+        <div class="stat-card bg-white rounded-2xl shadow-sm p-5 md:p-6 border border-slate-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-slate-500 text-xs font-semibold uppercase tracking-wider">Permission</p>
+              <p id="stat-permission" class="text-xs md:text-sm font-bold text-slate-800 mt-2">Standard</p>
+            </div>
+            <div class="icon-circle bg-amber-100 text-amber-600 w-12 h-12 md:w-14 md:h-14">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <!-- Other Sections -->
-    <section id="about" class="section">
-        <h2>About Us</h2>
-        <p>We are a leading platform for Forex trading, offering an array of tools and features for every level of trader.</p>
-    </section>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 lg:col-span-1 overflow-hidden">
+          <div class="gradient-bg px-4 md:px-6 py-4">
+            <h2 class="text-white font-bold text-base md:text-lg flex items-center gap-2">
+              <i class="fas fa-cog"></i> Panel Settings
+            </h2>
+          </div>
+          <form id="normal-settings-form" class="p-4 md:p-6 space-y-5">
+            <div>
+              <label class="block text-slate-700 text-xs font-bold mb-2 uppercase tracking-wider">
+                <i class="fas fa-link mr-1 text-indigo-500"></i> Your Referral Link (Full URL)
+              </label>
+              <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-3">
+                <code id="normal-generated-link" class="text-blue-700 text-xs break-all font-mono block"></code>
+              </div>
+              <button type="button" id="normal-copy-btn" class="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 rounded-lg transition">
+                <i class="fas fa-copy mr-1"></i>Copy Link
+              </button>
+              <p class="text-xs text-slate-500 mt-2 italic">Only members joining via this link are yours</p>
+            </div>
+            
+            <div id="telegram-link-section" class="hidden">
+              <label class="block text-slate-700 text-xs font-bold mb-2 uppercase tracking-wider">
+                <i class="fab fa-telegram mr-1 text-blue-500"></i> Telegram Group Link
+                <span class="badge-pill bg-emerald-100 text-emerald-700 ml-2"><i class="fas fa-edit"></i>Editable</span>
+              </label>
+              <input type="url" id="normal-telegram-link" class="input-modern w-full px-4 py-3 rounded-xl" placeholder="https://t.me/yourgroup">
+            </div>
 
-    <section id="support" class="section">
-        <h2>Support</h2>
-        <p>If you need help, our team is available 24/7. Reach out to us through email or live chat.</p>
-    </section>
+            <div id="telegram-link-readonly" class="hidden">
+              <label class="block text-slate-700 text-xs font-bold mb-2 uppercase tracking-wider">
+                <i class="fab fa-telegram mr-1 text-blue-500"></i> Telegram Group Link
+                <span class="badge-pill bg-rose-100 text-rose-700 ml-2"><i class="fas fa-lock"></i>Read Only</span>
+              </label>
+              <input type="text" id="normal-telegram-link-readonly" class="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-200 text-slate-500" readonly>
+            </div>
 
-    <section id="work" class="section">
-        <h2>How It Works</h2>
-        <p>Forex trading involves buying and selling currPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakPinakencies, and with our platform, you can easily navigate the market.</p>
-    </section>
+            <button type="submit" id="normal-save-btn" class="btn-success w-full text-white font-bold py-3 rounded-xl hidden">
+              <i class="fas fa-save mr-2"></i>Save Changes
+            </button>
+          </form>
+        </div>
 
-    <footer>
-        <p>&copy; 2025 Forex Trading. All Rights Reserved.</p>
-    </footer>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 lg:col-span-2 overflow-hidden flex flex-col">
+          <div class="gradient-bg px-4 md:px-6 py-4 flex items-center justify-between flex-wrap gap-3">
+            <h2 class="text-white font-bold text-base md:text-lg flex items-center gap-2">
+              <i class="fas fa-users"></i> My Members
+            </h2>
+            <button id="normal-export-btn" class="bg-white/20 hover:bg-white/30 backdrop-blur text-white text-xs md:text-sm font-semibold px-3 md:px-4 py-2 rounded-lg border border-white/30 transition">
+              <i class="fas fa-file-excel mr-1"></i>Export
+            </button>
+          </div>
+          
+          <div class="p-4 md:p-5 border-b border-slate-100">
+            <div class="relative">
+              <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="normal-search-input" class="input-modern w-full pl-11 pr-4 py-3 rounded-xl" placeholder="Search Telegram or WhatsApp...">
+            </div>
+          </div>
 
-    <script src="script.js"></script>
+          <div class="overflow-x-auto scroll-custom flex-grow table-wrapper">
+            <table class="table-modern min-w-full">
+              <thead>
+                <tr>
+                  <th class="px-4 md:px-5 py-3.5 text-left text-xs text-slate-600 uppercase">#</th>
+                  <th class="px-4 md:px-5 py-3.5 text-left text-xs text-slate-600 uppercase">Member</th>
+                  <th class="px-4 md:px-5 py-3.5 text-left text-xs text-slate-600 uppercase">Telegram</th>
+                  <th class="px-4 md:px-5 py-3.5 text-left text-xs text-slate-600 uppercase">WhatsApp</th>
+                  <th class="px-4 md:px-5 py-3.5 text-left text-xs text-slate-600 uppercase">Date</th>
+                </tr>
+              </thead>
+              <tbody id="normal-members-table" class="divide-y divide-slate-100"></tbody>
+            </table>
+            <div id="normal-no-members" class="text-center py-16 text-slate-400 hidden">
+              <i class="fas fa-user-slash text-5xl mb-3 text-slate-300"></i>
+              <p class="font-semibold">No members yet</p>
+              <p class="text-sm">Share your referral link to get started</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MASTER ADMIN DASHBOARD -->
+  <div id="master-dashboard-view" class="min-h-screen hidden">
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+    <div class="flex">
+      <aside class="sidebar sidebar-gradient w-64 min-h-screen flex-shrink-0 text-white p-5 flex flex-col">
+        <div class="flex items-center justify-between mb-10 px-2">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
+              <i class="fas fa-crown text-2xl text-amber-300"></i>
+            </div>
+            <div>
+              <h1 class="font-extrabold text-lg">FX Group</h1>
+              <p class="text-xs text-purple-200">Master Panel</p>
+            </div>
+          </div>
+          <button id="close-sidebar" class="md:hidden text-white/80 hover:text-white">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        
+        <nav class="flex-1 space-y-1">
+          <button id="tab-admins" class="nav-link active w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-white">
+            <i class="fas fa-user-shield w-5"></i> Manage Admins
+          </button>
+          <button id="tab-members" class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-white/80">
+            <i class="fas fa-users w-5"></i> All Members
+          </button>
+          <button id="tab-stats" class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold text-white/80">
+            <i class="fas fa-chart-bar w-5"></i> Statistics
+          </button>
+        </nav>
+
+        <div class="mt-auto pt-5 border-t border-white/10">
+          <div class="bg-white/5 rounded-xl p-3 mb-3">
+            <p id="master-email" class="text-xs text-purple-200 truncate"></p>
+            <p class="text-[10px] text-amber-300 font-semibold mt-1"><i class="fas fa-crown mr-1"></i>SUPER ADMIN</p>
+          </div>
+          <button class="logout-btn w-full btn-danger text-white py-2.5 rounded-lg font-semibold text-sm">
+            <i class="fas fa-sign-out-alt mr-2"></i>Logout
+          </button>
+        </div>
+      </aside>
+
+      <main class="flex-grow bg-slate-50 min-h-screen w-full">
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-20">
+          <div class="px-4 md:px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <button id="mobile-menu-btn" class="mobile-menu-btn w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 items-center justify-center">
+                <i class="fas fa-bars text-slate-700"></i>
+              </button>
+              <div>
+                <h2 id="page-title" class="text-lg md:text-xl font-bold text-slate-800">Manage Admins</h2>
+                <p class="text-xs text-slate-500 hidden md:block">Control all panel administrators</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="badge-pill bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 text-xs md:text-sm">
+                <i class="fas fa-crown"></i> <span class="hidden sm:inline">Master</span>
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <div class="p-4 md:p-6 space-y-4 md:space-y-6">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div class="stat-card bg-white rounded-2xl shadow-sm p-4 md:p-5 border border-slate-100">
+              <div class="flex items-center gap-3">
+                <div class="icon-circle bg-indigo-100 text-indigo-600 w-10 h-10 md:w-12 md:h-12 rounded-xl text-base md:text-lg">
+                  <i class="fas fa-user-tie"></i>
+                </div>
+                <div>
+                  <p class="text-[10px] text-slate-500 uppercase font-bold">Admins</p>
+                  <p id="master-stat-admins" class="text-xl md:text-2xl font-extrabold text-slate-800">0</p>
+                </div>
+              </div>
+            </div>
+            <div class="stat-card bg-white rounded-2xl shadow-sm p-4 md:p-5 border border-slate-100">
+              <div class="flex items-center gap-3">
+                <div class="icon-circle bg-emerald-100 text-emerald-600 w-10 h-10 md:w-12 md:h-12 rounded-xl text-base md:text-lg">
+                  <i class="fas fa-users"></i>
+                </div>
+                <div>
+                  <p class="text-[10px] text-slate-500 uppercase font-bold">Members</p>
+                  <p id="master-stat-members" class="text-xl md:text-2xl font-extrabold text-slate-800">0</p>
+                </div>
+              </div>
+            </div>
+            <div class="stat-card bg-white rounded-2xl shadow-sm p-4 md:p-5 border border-slate-100">
+              <div class="flex items-center gap-3">
+                <div class="icon-circle bg-amber-100 text-amber-600 w-10 h-10 md:w-12 md:h-12 rounded-xl text-base md:text-lg">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div>
+                  <p class="text-[10px] text-slate-500 uppercase font-bold">Pending</p>
+                  <p id="master-stat-pending" class="text-xl md:text-2xl font-extrabold text-slate-800">0</p>
+                </div>
+              </div>
+            </div>
+            <div class="stat-card bg-white rounded-2xl shadow-sm p-4 md:p-5 border border-slate-100">
+              <div class="flex items-center gap-3">
+                <div class="icon-circle bg-rose-100 text-rose-600 w-10 h-10 md:w-12 md:h-12 rounded-xl text-base md:text-lg">
+                  <i class="fas fa-ban"></i>
+                </div>
+                <div>
+                  <p class="text-[10px] text-slate-500 uppercase font-bold">Blocked</p>
+                  <p id="master-stat-blocked" class="text-xl md:text-2xl font-extrabold text-slate-800">0</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="master-admins-section" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div class="gradient-bg-2 px-4 md:px-6 py-4 flex items-center justify-between flex-wrap gap-3">
+              <h2 class="text-white font-bold text-base md:text-lg flex items-center gap-2">
+                <i class="fas fa-user-shield"></i> Registered Admins
+              </h2>
+              <span class="badge-pill bg-white/20 text-white backdrop-blur text-xs" id="admins-count-badge">0 Admins</span>
+            </div>
+            <div class="overflow-x-auto scroll-custom table-wrapper">
+              <table class="table-modern min-w-full">
+                <thead>
+                  <tr>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Admin</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Full Referral URL</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Status</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Search</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Link Edit</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="master-admins-table" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="master-members-section" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hidden">
+            <div class="gradient-bg-2 px-4 md:px-6 py-4 flex items-center justify-between flex-wrap gap-3">
+              <h2 class="text-white font-bold text-base md:text-lg flex items-center gap-2">
+                <i class="fas fa-users"></i> All Members Database
+              </h2>
+              <button id="master-export-all-btn" class="btn-success text-white text-xs md:text-sm font-semibold px-3 md:px-4 py-2 rounded-lg">
+                <i class="fas fa-download mr-1"></i><span class="hidden sm:inline">Export All</span>
+              </button>
+            </div>
+            <div class="p-4 md:p-5 border-b border-slate-100">
+              <div class="relative max-w-md">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="master-search-input" class="input-modern w-full pl-11 pr-4 py-3 rounded-xl" placeholder="Search by name, telegram, whatsapp...">
+              </div>
+            </div>
+            <div class="overflow-x-auto scroll-custom table-wrapper">
+              <table class="table-modern min-w-full">
+                <thead>
+                  <tr>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Member</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Telegram</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">WhatsApp</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Full Referral URL</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">TG Group</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="master-members-table" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="master-stats-section" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hidden">
+            <div class="gradient-bg-2 px-4 md:px-6 py-4">
+              <h2 class="text-white font-bold text-base md:text-lg flex items-center gap-2">
+                <i class="fas fa-chart-pie"></i> Performance Statistics
+              </h2>
+            </div>
+            <div class="p-4 md:p-6">
+              <h3 class="font-bold text-slate-800 mb-4 text-sm md:text-base">Members per Admin</h3>
+              <div id="stats-admin-breakdown" class="space-y-3"></div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- VIEW ADMIN MEMBERS MODAL -->
+  <div id="view-members-modal" class="fixed inset-0 z-50 hidden items-center justify-center modal-overlay p-3 md:p-4">
+    <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+      <div class="gradient-bg-2 px-4 md:px-6 py-4 flex items-center justify-between rounded-t-2xl flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+            <i class="fas fa-user text-white"></i>
+          </div>
+          <div>
+            <h3 class="text-white font-bold text-sm md:text-base">Admin's Members</h3>
+            <p id="modal-admin-email" class="text-xs text-white/80 truncate max-w-[200px] md:max-w-md"></p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button id="modal-export-btn" class="bg-white/20 hover:bg-white/30 backdrop-blur text-white text-xs md:text-sm font-semibold px-3 md:px-4 py-2 rounded-lg border border-white/30">
+            <i class="fas fa-download mr-1"></i><span class="hidden sm:inline">Export</span>
+          </button>
+          <button id="modal-close-btn" class="bg-white/10 hover:bg-white/20 text-white w-10 h-10 rounded-lg border border-white/30 flex items-center justify-center">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      <div class="p-4 md:p-5 border-b border-slate-100">
+        <div class="relative max-w-md">
+          <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="modal-search-input" class="input-modern w-full pl-11 pr-4 py-2.5 md:py-3 rounded-xl text-sm" placeholder="Search in this admin's members...">
+        </div>
+        <p id="modal-members-count" class="text-xs text-slate-500 mt-2"></p>
+      </div>
+      <div class="overflow-y-auto scroll-custom flex-grow">
+        <div class="table-wrapper">
+          <table class="table-modern min-w-full">
+            <thead>
+              <tr>
+                <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Name</th>
+                <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Telegram</th>
+                <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">WhatsApp</th>
+                <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">TG Group</th>
+                <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Joined</th>
+              </tr>
+            </thead>
+            <tbody id="modal-members-table" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+        <div id="modal-no-members" class="text-center py-16 text-slate-400 hidden">
+          <i class="fas fa-inbox text-5xl mb-3 text-slate-300"></i>
+          <p class="font-semibold">No members found</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAwS7AZewx0L8KRGeFXB7Jq4BJEbSB0xO0",
+      authDomain: "fxgroup-5dd7c.firebaseapp.com",
+      projectId: "fxgroup-5dd7c",
+      storageBucket: "fxgroup-5dd7c.firebasestorage.app",
+      messagingSenderId: "982128077012",
+      appId: "1:982128077012:web:e5088b7be662cecf20f341",
+      measurementId: "G-9FRXZNCJQJ"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // ✅ MASTER ADMIN EMAIL - Only this email can access master panel
+    const MASTER_ADMIN_EMAIL = 'pinakchakraborty626@gmail.com';
+
+    let currentAdminDoc = null;
+    let isMasterLoginMode = false;
+    let normalMembersList = [];
+    let masterAdminsList = [];
+    let masterMembersList = [];
+    let adminTelegramMap = {};
+    let currentModalSlug = null;
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      const icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+      const bg = type === 'success' ? 'from-emerald-500 to-emerald-600' : type === 'error' ? 'from-rose-500 to-rose-600' : 'from-indigo-500 to-indigo-600';
+      toast.className = `toast-enter bg-gradient-to-r ${bg} text-white px-4 md:px-5 py-3 md:py-3.5 rounded-xl shadow-2xl flex items-start gap-3 border border-white/20 max-w-[90vw] md:max-w-sm`;
+      toast.innerHTML = `<i class="fas ${icon} text-lg mt-0.5"></i><div class="flex-1 text-xs md:text-sm font-medium">${message}</div>`;
+      document.getElementById('toast-container').appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        toast.style.transition = 'all 0.3s';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function generateUniqueSlug(email) {
+      const base = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+      const timestamp = Date.now().toString(36);
+      const random = Math.random().toString(36).substring(2, 7);
+      return `${base}_${timestamp}_${random}`;
+    }
+
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+      document.querySelector('.sidebar').classList.add('open');
+      document.getElementById('sidebar-overlay').classList.add('show');
+    });
+
+    document.getElementById('close-sidebar')?.addEventListener('click', () => {
+      document.querySelector('.sidebar').classList.remove('open');
+      document.getElementById('sidebar-overlay').classList.remove('show');
+    });
+
+    document.getElementById('sidebar-overlay')?.addEventListener('click', () => {
+      document.querySelector('.sidebar').classList.remove('open');
+      document.getElementById('sidebar-overlay').classList.remove('show');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.mobile-action-btn') && !e.target.closest('.mobile-actions-menu')) {
+        document.querySelectorAll('.mobile-actions-menu').forEach(menu => {
+          menu.classList.remove('show');
+        });
+      }
+    });
+
+    document.getElementById('toggle-mode-btn').addEventListener('click', (e) => {
+      isMasterLoginMode = !isMasterLoginMode;
+      const title = document.getElementById('login-title');
+      if (isMasterLoginMode) {
+        e.target.innerHTML = '<i class="fas fa-exchange-alt mr-1"></i>Switch to Normal Admin';
+        title.innerText = "Master Admin Login";
+      } else {
+        e.target.innerHTML = '<i class="fas fa-exchange-alt mr-1"></i>Switch to Master Admin';
+        title.innerText = "FX Group";
+      }
+    });
+
+    async function handleAuth(isRegister) {
+      const email = document.getElementById('email').value.trim().toLowerCase();
+      const pass = document.getElementById('password').value;
+      
+      if (!email || !pass) return showToast('Email এবং Password প্রয়োজন', 'error');
+      if (pass.length < 6) return showToast('Password কমপক্ষে ৬ অক্ষরের হতে হবে', 'error');
+      
+      // 🔒 MASTER ADMIN CHECK - Only specific email can login as master
+      if (isMasterLoginMode && email !== MASTER_ADMIN_EMAIL) {
+        return showToast(`❌ Master Admin access denied!\nOnly ${MASTER_ADMIN_EMAIL} can login as Master Admin.`, 'error');
+      }
+
+      const btn = document.getElementById(isRegister ? 'register-btn' : 'login-btn');
+      const originalHTML = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>অপেক্ষা করুন...';
+
+      try {
+        let userCred;
+        if (isRegister) {
+          userCred = await createUserWithEmailAndPassword(auth, email, pass);
+          showToast('অ্যাকাউন্ট তৈরি হয়েছে! Approval-এর জন্য অপেক্ষা করুন।');
+        } else {
+          userCred = await signInWithEmailAndPassword(auth, email, pass);
+          showToast('সফলভাবে লগইন হয়েছে!');
+        }
+        if (isMasterLoginMode) {
+          await setDoc(doc(db, 'admins', userCred.user.uid), { role: 'master' }, { merge: true });
+        }
+      } catch (err) {
+        if(err.code === 'auth/invalid-credential') showToast('ভুল email অথবা password', 'error');
+        else if(err.code === 'auth/email-already-in-use') showToast('এই email দিয়ে আগেই account আছে', 'error');
+        else showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+      }
+    }
+
+    document.getElementById('login-btn').addEventListener('click', () => handleAuth(false));
+    document.getElementById('register-btn').addEventListener('click', () => handleAuth(true));
+    document.querySelectorAll('.logout-btn').forEach(btn => btn.addEventListener('click', () => signOut(auth)));
+
+    async function isSlugExists(slug) {
+      const q = query(collection(db, 'admins'), where('customSlug', '==', slug));
+      const snapshot = await getDocs(q);
+      return !snapshot.empty;
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        document.getElementById('login-view').classList.add('hidden');
+        const adminRef = doc(db, 'admins', user.uid);
+        const snap = await getDoc(adminRef);
+        
+        if (snap.exists()) {
+          currentAdminDoc = { id: user.uid, ...snap.data() };
+          
+          if (!currentAdminDoc.customSlug || currentAdminDoc.customSlug.length < 10) {
+            let newSlug = generateUniqueSlug(user.email);
+            while (await isSlugExists(newSlug)) {
+              newSlug = generateUniqueSlug(user.email);
+            }
+            currentAdminDoc.customSlug = newSlug;
+            await updateDoc(adminRef, { customSlug: newSlug });
+          }
+          
+          if (currentAdminDoc.canSearchAll === undefined) {
+            currentAdminDoc.canSearchAll = false;
+            await updateDoc(adminRef, { canSearchAll: false });
+          }
+          
+        } else {
+          let newSlug = generateUniqueSlug(user.email);
+          while (await isSlugExists(newSlug)) {
+            newSlug = generateUniqueSlug(user.email);
+          }
+          
+          currentAdminDoc = {
+            id: user.uid, 
+            email: user.email, 
+            role: 'normal',
+            isBlocked: false, 
+            isApproved: false, 
+            canSearchAll: false,
+            canChangeTelegramLink: false,
+            customSlug: newSlug,
+            telegramLink: '',
+            createdAt: new Date()
+          };
+          await setDoc(adminRef, currentAdminDoc);
+        }
+
+        if (currentAdminDoc.role !== 'master') {
+          if (!currentAdminDoc.isApproved) {
+            showToast('আপনার account এখনও Approved হয়নি', 'error');
+            await signOut(auth); return;
+          }
+          if (currentAdminDoc.isBlocked) {
+            showToast('আপনার account Blocked করা হয়েছে', 'error');
+            await signOut(auth); return;
+          }
+        }
+
+        if (currentAdminDoc.role === 'master') {
+          document.getElementById('master-dashboard-view').classList.remove('hidden');
+          document.getElementById('normal-dashboard-view').classList.add('hidden');
+          document.getElementById('master-email').innerText = user.email;
+          loadMasterData();
+        } else {
+          document.getElementById('normal-dashboard-view').classList.remove('hidden');
+          document.getElementById('master-dashboard-view').classList.add('hidden');
+          document.getElementById('normal-user-email').innerText = user.email;
+          setupNormalDashboard();
+        }
+      } else {
+        document.getElementById('login-view').classList.remove('hidden');
+        document.getElementById('normal-dashboard-view').classList.add('hidden');
+        document.getElementById('master-dashboard-view').classList.add('hidden');
+        document.getElementById('login-form').reset();
+        currentAdminDoc = null;
+      }
+    });
+
+    async function setupNormalDashboard() {
+      const fullUrl = `https://golpoghor9.blogspot.com/?ref=${currentAdminDoc.customSlug}`;
+      document.getElementById('normal-generated-link').textContent = fullUrl;
+      
+      const telegramSection = document.getElementById('telegram-link-section');
+      const telegramReadonly = document.getElementById('telegram-link-readonly');
+      const saveBtn = document.getElementById('normal-save-btn');
+      
+      if (currentAdminDoc.canChangeTelegramLink) {
+        telegramSection.classList.remove('hidden');
+        telegramReadonly.classList.add('hidden');
+        saveBtn.classList.remove('hidden');
+        document.getElementById('normal-telegram-link').value = currentAdminDoc.telegramLink || '';
+      } else {
+        telegramSection.classList.add('hidden');
+        telegramReadonly.classList.remove('hidden');
+        saveBtn.classList.add('hidden');
+        document.getElementById('normal-telegram-link-readonly').value = currentAdminDoc.telegramLink || 'Not set yet';
+      }
+      
+      const statPerm = document.getElementById('stat-permission');
+      const perms = [];
+      if(currentAdminDoc.canSearchAll) perms.push('Global Search');
+      if(currentAdminDoc.canChangeTelegramLink) perms.push('Link Edit');
+      statPerm.innerText = perms.length ? perms.join(', ') : 'Standard';
+      
+      await loadNormalMembers();
+    }
+
+    document.getElementById('normal-copy-btn').addEventListener('click', () => {
+      const link = document.getElementById('normal-generated-link').textContent;
+      navigator.clipboard.writeText(link);
+      showToast('Full Link কপি হয়েছে!', 'success');
+    });
+
+    document.getElementById('normal-settings-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentAdminDoc.canChangeTelegramLink) return showToast('Permission নেই!', 'error');
+      const tgLink = document.getElementById('normal-telegram-link').value.trim();
+      const btn = document.getElementById('normal-save-btn');
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+      try {
+        await updateDoc(doc(db, 'admins', currentAdminDoc.id), { telegramLink: tgLink });
+        currentAdminDoc.telegramLink = tgLink;
+        showToast('সফলভাবে সেভ হয়েছে!');
+      } catch(e) { showToast(e.message, 'error'); }
+      btn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Changes';
+    });
+
+    async function loadNormalMembers() {
+      try {
+        let snapshot;
+        const mySlug = currentAdminDoc.customSlug;
+        
+        if (currentAdminDoc.canSearchAll === true) {
+          snapshot = await getDocs(collection(db, 'members'));
+        } else {
+          const q = query(collection(db, 'members'), where('referredBy', '==', mySlug));
+          snapshot = await getDocs(q);
+        }
+        
+        normalMembersList = [];
+        snapshot.forEach(docSnap => {
+          const data = docSnap.data();
+          if (currentAdminDoc.canSearchAll || data.referredBy === mySlug) {
+            normalMembersList.push({ id: docSnap.id, ...data });
+          }
+        });
+        
+        document.getElementById('stat-total-members').innerText = normalMembersList.length;
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const todayCount = normalMembersList.filter(m => {
+          const d = m.createdAt?.toDate ? m.createdAt.toDate() : new Date(m.createdAt || 0);
+          return d >= today;
+        }).length;
+        document.getElementById('stat-today-members').innerText = todayCount;
+        
+        renderNormalMembers('');
+      } catch(e) { 
+        showToast('Members লোড করতে সমস্যা', 'error'); 
+      }
+    }
+
+    document.getElementById('normal-search-input').addEventListener('input', (e) => renderNormalMembers(e.target.value.trim().toLowerCase()));
+
+    function getTgLinkForMember(member) {
+      if (member.telegramLink) return member.telegramLink;
+      if (member.referredBy && adminTelegramMap[member.referredBy]) {
+        return adminTelegramMap[member.referredBy];
+      }
+      return null;
+    }
+
+    function renderNormalMembers(searchTerm) {
+      const tbody = document.getElementById('normal-members-table');
+      tbody.innerHTML = '';
+      
+      const mySlug = currentAdminDoc.customSlug;
+      const filtered = normalMembersList.filter(m => {
+        if (!currentAdminDoc.canSearchAll && m.referredBy !== mySlug) return false;
+        
+        return !searchTerm || 
+          (m.name && m.name.toLowerCase().includes(searchTerm)) ||
+          (m.telegramUsername && m.telegramUsername.toLowerCase().includes(searchTerm)) || 
+          (m.whatsappNumber && m.whatsappNumber.includes(searchTerm));
+      }).sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      if(!filtered.length) { 
+        document.getElementById('normal-no-members').classList.remove('hidden'); 
+        return; 
+      }
+      document.getElementById('normal-no-members').classList.add('hidden');
+
+      filtered.forEach((m, idx) => {
+        const tr = document.createElement('tr');
+        const dateStr = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleDateString('bn-BD') : new Date(m.createdAt || 0).toLocaleDateString();
+        
+        tr.innerHTML = `
+          <td class="px-4 md:px-5 py-3 text-sm font-semibold text-slate-500" data-label="#">${idx + 1}</td>
+          <td class="px-4 md:px-5 py-3" data-label="Member">
+            <div class="flex items-center gap-2 md:gap-3">
+              <div class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-xs md:text-sm flex-shrink-0">
+                ${(m.name || 'U').charAt(0).toUpperCase()}
+              </div>
+              <span class="font-semibold text-slate-800 text-sm">${m.name || 'Unknown'}</span>
+            </div>
+          </td>
+          <td class="px-4 md:px-5 py-3" data-label="Telegram">
+            ${m.telegramUsername ? `<a href="https://t.me/${m.telegramUsername.replace('@','')}" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs md:text-sm font-medium"><i class="fab fa-telegram mr-1"></i>${m.telegramUsername}</a>` : '<span class="text-slate-400 text-xs md:text-sm">—</span>'}
+          </td>
+          <td class="px-4 md:px-5 py-3" data-label="WhatsApp">
+            ${m.whatsappNumber ? `<a href="https://wa.me/${m.whatsappNumber.replace(/[^0-9]/g,'')}" target="_blank" class="text-emerald-600 hover:text-emerald-800 text-xs md:text-sm font-medium"><i class="fab fa-whatsapp mr-1"></i>${m.whatsappNumber}</a>` : '<span class="text-slate-400 text-xs md:text-sm">—</span>'}
+          </td>
+          <td class="px-4 md:px-5 py-3 text-slate-500 text-xs" data-label="Date">${dateStr}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('normal-export-btn').addEventListener('click', () => {
+      exportToExcel(normalMembersList, `My_Members_${new Date().toLocaleDateString()}`);
+    });
+
+    function switchMasterTab(tab) {
+      document.querySelectorAll('#tab-admins, #tab-members, #tab-stats').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.remove('text-white');
+        btn.classList.add('text-white/80');
+      });
+      const activeBtn = document.getElementById(`tab-${tab}`);
+      activeBtn.classList.add('active');
+      activeBtn.classList.remove('text-white/80');
+      activeBtn.classList.add('text-white');
+      
+      document.getElementById('master-admins-section').classList.add('hidden');
+      document.getElementById('master-members-section').classList.add('hidden');
+      document.getElementById('master-stats-section').classList.add('hidden');
+      
+      if (tab === 'admins') {
+        document.getElementById('master-admins-section').classList.remove('hidden');
+        document.getElementById('page-title').innerText = 'Manage Admins';
+      } else if (tab === 'members') {
+        document.getElementById('master-members-section').classList.remove('hidden');
+        document.getElementById('page-title').innerText = 'All Members Database';
+      } else if (tab === 'stats') {
+        document.getElementById('master-stats-section').classList.remove('hidden');
+        document.getElementById('page-title').innerText = 'Statistics Overview';
+      }
+      
+      document.querySelector('.sidebar').classList.remove('open');
+      document.getElementById('sidebar-overlay').classList.remove('show');
+    }
+
+    document.getElementById('tab-admins').addEventListener('click', () => switchMasterTab('admins'));
+    document.getElementById('tab-members').addEventListener('click', () => switchMasterTab('members'));
+    document.getElementById('tab-stats').addEventListener('click', () => switchMasterTab('stats'));
+
+    async function loadMasterData() {
+      try {
+        const admSnap = await getDocs(collection(db, 'admins'));
+        masterAdminsList = [];
+        adminTelegramMap = {};
+        
+        admSnap.forEach(d => { 
+          const data = d.data();
+          if(data.role !== 'master') {
+            masterAdminsList.push({ id: d.id, ...data });
+            if (data.customSlug) {
+              adminTelegramMap[data.customSlug] = data.telegramLink || '';
+            }
+          }
+        });
+
+        const memSnap = await getDocs(collection(db, 'members'));
+        masterMembersList = [];
+        memSnap.forEach(d => masterMembersList.push({ id: d.id, ...d.data() }));
+
+        document.getElementById('master-stat-admins').innerText = masterAdminsList.length;
+        document.getElementById('master-stat-members').innerText = masterMembersList.length;
+        document.getElementById('master-stat-pending').innerText = masterAdminsList.filter(a => !a.isApproved).length;
+        document.getElementById('master-stat-blocked').innerText = masterAdminsList.filter(a => a.isBlocked).length;
+        document.getElementById('admins-count-badge').innerText = `${masterAdminsList.length} Admins`;
+
+        renderMasterAdmins();
+        renderMasterMembers('');
+        renderStatsBreakdown();
+      } catch (e) { showToast('Data লোড করতে সমস্যা', 'error'); }
+    }
+
+    window.toggleAdminApproval = async function(uid, isApproved) {
+      if(!confirm(`${isApproved ? 'Unapprove' : 'Approve'} করবেন?`)) return;
+      await updateDoc(doc(db, 'admins', uid), { isApproved: !isApproved });
+      showToast(`Admin ${!isApproved ? 'Approved' : 'Unapproved'}!`);
+      loadMasterData();
+    };
+
+    window.toggleAdminBlock = async function(uid, isBlocked) {
+      if(!confirm(`${isBlocked ? 'Unblock' : 'Block'} করবেন?`)) return;
+      await updateDoc(doc(db, 'admins', uid), { isBlocked: !isBlocked });
+      showToast(`Admin ${!isBlocked ? 'Blocked' : 'Unblocked'}!`);
+      loadMasterData();
+    };
+
+    window.toggleSearchPerm = async function(uid, canSearchAll) {
+      const action = !canSearchAll ? 'GRANT Global Search' : 'REVOKE Global Search';
+      if(!confirm(`আপনি কি এই অ্যাডমিনকে ${action} permission দিতে চান?\n\n⚠️ Global Search দিলে সে সব অ্যাডমিনের মেম্বার দেখতে পারবে!`)) return;
+      await updateDoc(doc(db, 'admins', uid), { canSearchAll: !canSearchAll });
+      showToast(`Search ${!canSearchAll ? 'Granted' : 'Revoked'}!`);
+      loadMasterData();
+    };
+
+    window.toggleLinkEditPerm = async function(uid, canChangeTelegramLink) {
+      await updateDoc(doc(db, 'admins', uid), { canChangeTelegramLink: !canChangeTelegramLink });
+      showToast(`Link Edit ${!canChangeTelegramLink ? 'Granted' : 'Revoked'}!`);
+      loadMasterData();
+    };
+
+    window.viewAdminMembers = function(slug, email) {
+      currentModalSlug = slug;
+      document.getElementById('modal-admin-email').innerText = email;
+      const membersOfAdmin = masterMembersList.filter(m => m.referredBy === slug);
+      document.getElementById('modal-members-count').innerText = `Total: ${membersOfAdmin.length} members`;
+      document.getElementById('view-members-modal').classList.remove('hidden');
+      document.getElementById('view-members-modal').classList.add('flex');
+      document.getElementById('modal-search-input').value = '';
+      renderModalMembers('');
+    };
+
+    document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+    document.getElementById('view-members-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'view-members-modal') closeModal();
+    });
+
+    function closeModal() {
+      document.getElementById('view-members-modal').classList.add('hidden');
+      document.getElementById('view-members-modal').classList.remove('flex');
+      currentModalSlug = null;
+    }
+
+    document.getElementById('modal-search-input').addEventListener('input', (e) => {
+      renderModalMembers(e.target.value.trim().toLowerCase());
+    });
+
+    document.getElementById('modal-export-btn').addEventListener('click', () => {
+      const filtered = masterMembersList.filter(m => m.referredBy === currentModalSlug);
+      exportToExcel(filtered, `Members_Of_${currentModalSlug}`);
+    });
+
+    function renderModalMembers(searchTerm) {
+      const tbody = document.getElementById('modal-members-table');
+      tbody.innerHTML = '';
+      const filtered = masterMembersList.filter(m => {
+        const belongs = m.referredBy === currentModalSlug;
+        const matches = !searchTerm || 
+          (m.name && m.name.toLowerCase().includes(searchTerm)) ||
+          (m.telegramUsername && m.telegramUsername.toLowerCase().includes(searchTerm)) || 
+          (m.whatsappNumber && m.whatsappNumber.includes(searchTerm));
+        return belongs && matches;
+      }).sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      if(!filtered.length) { document.getElementById('modal-no-members').classList.remove('hidden'); return; }
+      document.getElementById('modal-no-members').classList.add('hidden');
+
+      filtered.forEach(m => {
+        const tr = document.createElement('tr');
+        const dateStr = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleDateString('bn-BD') : new Date(m.createdAt || 0).toLocaleDateString();
+        const tgLink = getTgLinkForMember(m);
+        
+        tr.innerHTML = `
+          <td class="px-3 md:px-4 py-3" data-label="Name">
+            <div class="flex items-center gap-2 md:gap-3">
+              <div class="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold text-xs">
+                ${(m.name || 'U').charAt(0).toUpperCase()}
+              </div>
+              <span class="font-semibold text-slate-800 text-sm">${m.name || 'Unknown'}</span>
+            </div>
+          </td>
+          <td class="px-3 md:px-4 py-3" data-label="Telegram">
+            ${m.telegramUsername ? `<a href="https://t.me/${m.telegramUsername.replace('@','')}" target="_blank" class="text-blue-600 text-xs md:text-sm"><i class="fab fa-telegram mr-1"></i>${m.telegramUsername}</a>` : '<span class="text-slate-400 text-xs">—</span>'}
+          </td>
+          <td class="px-3 md:px-4 py-3" data-label="WhatsApp">
+            ${m.whatsappNumber ? `<a href="https://wa.me/${m.whatsappNumber.replace(/[^0-9]/g,'')}" target="_blank" class="text-emerald-600 text-xs md:text-sm"><i class="fab fa-whatsapp mr-1"></i>${m.whatsappNumber}</a>` : '<span class="text-slate-400 text-xs">—</span>'}
+          </td>
+          <td class="px-3 md:px-4 py-3" data-label="TG Group">
+            ${tgLink ? `<a href="${tgLink}" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs font-medium inline-flex items-center gap-1 bg-blue-50 px-2 py-1 rounded max-w-[150px] truncate" title="${tgLink}"><i class="fab fa-telegram"></i> ${tgLink.replace('https://','')}</a>` : '<span class="text-slate-400 text-xs">Not Set</span>'}
+          </td>
+          <td class="px-3 md:px-4 py-3 text-slate-500 text-xs" data-label="Joined">${dateStr}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.deleteMember = async function(memberId) {
+      if(!confirm('এই member কে delete করবেন?')) return;
+      await deleteDoc(doc(db, 'members', memberId));
+      showToast('Member deleted!');
+      loadMasterData();
+      if(currentModalSlug) renderModalMembers(document.getElementById('modal-search-input').value);
+    };
+
+    window.exportAdminMembers = function(slug) {
+      exportToExcel(masterMembersList.filter(m => m.referredBy === slug), `Members_Of_${slug}`);
+    };
+
+    window.toggleMobileActions = function(btnId) {
+      document.querySelectorAll('.mobile-actions-menu').forEach(menu => {
+        if (menu.id !== btnId) menu.classList.remove('show');
+      });
+      const menu = document.getElementById(btnId);
+      if (menu) menu.classList.toggle('show');
+    };
+
+    function renderMasterAdmins() {
+      const tbody = document.getElementById('master-admins-table');
+      tbody.innerHTML = '';
+      masterAdminsList.forEach((a, index) => {
+        const fullLink = `https://golpoghor9.blogspot.com/?ref=${a.customSlug}`;
+        const membersCount = masterMembersList.filter(m => m.referredBy === a.customSlug).length;
+        const tr = document.createElement('tr');
+        
+        const approvalBadge = a.isApproved 
+          ? '<span class="badge-pill bg-emerald-100 text-emerald-700"><i class="fas fa-check"></i> <span class="hidden sm:inline">Approved</span></span>'
+          : '<span class="badge-pill bg-amber-100 text-amber-700"><i class="fas fa-clock"></i> <span class="hidden sm:inline">Pending</span></span>';
+        
+        const blockBadge = a.isBlocked
+          ? '<span class="badge-pill bg-rose-100 text-rose-700"><i class="fas fa-ban"></i> <span class="hidden sm:inline">Blocked</span></span>'
+          : '<span class="badge-pill bg-slate-100 text-slate-600"><i class="fas fa-check"></i> <span class="hidden sm:inline">Active</span></span>';
+        
+        const uniqueMenuId = `actions-menu-${index}`;
+        
+        tr.innerHTML = `
+          <td class="px-3 md:px-4 py-4" data-label="Admin">
+            <div class="flex items-center gap-2 md:gap-3">
+              <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                ${a.email.charAt(0).toUpperCase()}
+              </div>
+              <div class="min-w-0">
+                <p class="font-bold text-slate-800 text-xs md:text-sm truncate">${a.email}</p>
+                <p class="text-xs text-slate-500"><i class="fas fa-users mr-1"></i>${membersCount} members</p>
+              </div>
+            </div>
+          </td>
+          <td class="px-3 md:px-4 py-4" data-label="Full Referral URL">
+            <div class="url-box" title="${fullLink}">${fullLink}</div>
+          </td>
+          <td class="px-3 md:px-4 py-4" data-label="Status">
+            <div class="flex flex-col gap-1">
+              ${approvalBadge}
+              ${blockBadge}
+            </div>
+          </td>
+          <td class="px-3 md:px-4 py-4" data-label="Search">
+            <button onclick="toggleSearchPerm('${a.id}', ${a.canSearchAll})" class="text-xs font-semibold px-3 py-1.5 rounded-lg transition ${a.canSearchAll ? 'bg-rose-100 text-rose-700 hover:bg-rose-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+              <i class="fas fa-${a.canSearchAll ? 'globe' : 'lock'} mr-1"></i>${a.canSearchAll ? 'Global' : 'Own'}
+            </button>
+          </td>
+          <td class="px-3 md:px-4 py-4" data-label="Link Edit">
+            <button onclick="toggleLinkEditPerm('${a.id}', ${a.canChangeTelegramLink})" class="text-xs font-semibold px-3 py-1.5 rounded-lg transition ${a.canChangeTelegramLink ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+              <i class="fas fa-${a.canChangeTelegramLink ? 'edit' : 'lock'} mr-1"></i>${a.canChangeTelegramLink ? 'On' : 'Off'}
+            </button>
+          </td>
+          <td class="px-3 md:px-4 py-4" data-label="Actions">
+            <div class="hidden md:flex flex-wrap gap-1">
+              <button onclick="viewAdminMembers('${a.customSlug}', '${a.email}')" class="text-xs font-semibold bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg transition">
+                <i class="fas fa-eye mr-1"></i>View
+              </button>
+              <button onclick="toggleAdminApproval('${a.id}', ${a.isApproved})" class="text-xs font-semibold ${a.isApproved ? 'bg-amber-500 hover:bg-amber-600' : 'bg-emerald-500 hover:bg-emerald-600'} text-white px-3 py-1.5 rounded-lg transition">
+                <i class="fas fa-${a.isApproved ? 'times' : 'check'} mr-1"></i>${a.isApproved ? 'Revoke' : 'Approve'}
+              </button>
+              <button onclick="toggleAdminBlock('${a.id}', ${a.isBlocked})" class="text-xs font-semibold ${a.isBlocked ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white px-3 py-1.5 rounded-lg transition">
+                <i class="fas fa-${a.isBlocked ? 'unlock' : 'ban'} mr-1"></i>${a.isBlocked ? 'Unblock' : 'Block'}
+              </button>
+              <button onclick="exportAdminMembers('${a.customSlug}')" class="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition">
+                <i class="fas fa-download"></i>
+              </button>
+            </div>
+            <div class="md:hidden relative mobile-action-btn">
+              <button onclick="toggleMobileActions('${uniqueMenuId}')" class="w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700">
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+              <div id="${uniqueMenuId}" class="mobile-actions-menu">
+                <button onclick="viewAdminMembers('${a.customSlug}', '${a.email}'); document.getElementById('${uniqueMenuId}').classList.remove('show')" class="text-indigo-600">
+                  <i class="fas fa-eye mr-2"></i>View Members
+                </button>
+                <button onclick="toggleAdminApproval('${a.id}', ${a.isApproved}); document.getElementById('${uniqueMenuId}').classList.remove('show')" class="${a.isApproved ? 'text-amber-600' : 'text-emerald-600'}">
+                  <i class="fas fa-${a.isApproved ? 'times' : 'check'} mr-2"></i>${a.isApproved ? 'Revoke Approval' : 'Approve'}
+                </button>
+                <button onclick="toggleAdminBlock('${a.id}', ${a.isBlocked}); document.getElementById('${uniqueMenuId}').classList.remove('show')" class="${a.isBlocked ? 'text-emerald-600' : 'text-rose-600'}">
+                  <i class="fas fa-${a.isBlocked ? 'unlock' : 'ban'} mr-2"></i>${a.isBlocked ? 'Unblock' : 'Block'}
+                </button>
+                <button onclick="exportAdminMembers('${a.customSlug}'); document.getElementById('${uniqueMenuId}').classList.remove('show')" class="text-slate-600 border-t border-slate-200 mt-1 pt-2">
+                  <i class="fas fa-download mr-2"></i>Export Data
+                </button>
+              </div>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('master-search-input').addEventListener('input', (e) => renderMasterMembers(e.target.value.trim().toLowerCase()));
+
+    function renderMasterMembers(searchTerm) {
+      const tbody = document.getElementById('master-members-table');
+      tbody.innerHTML = '';
+      const filtered = masterMembersList.filter(m => 
+        !searchTerm || 
+        (m.name && m.name.toLowerCase().includes(searchTerm)) ||
+        (m.telegramUsername && m.telegramUsername.toLowerCase().includes(searchTerm)) || 
+        (m.whatsappNumber && m.whatsappNumber.includes(searchTerm)) ||
+        (m.referredBy && m.referredBy.toLowerCase().includes(searchTerm))
+      ).sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+      filtered.forEach(m => {
+        const tr = document.createElement('tr');
+        const dateStr = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleDateString('bn-BD') : new Date(m.createdAt || 0).toLocaleDateString();
+        const tgLink = getTgLinkForMember(m);
+        const refAdmin = masterAdminsList.find(a => a.customSlug === m.referredBy);
+        const fullRefUrl = `https://golpoghor9.blogspot.com/?ref=${m.referredBy || 'unknown'}`;
+        
+        tr.innerHTML = `
+          <td class="px-3 md:px-4 py-3" data-label="Member">
+            <div class="flex items-center gap-2 md:gap-3">
+              <div class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                ${(m.name || 'U').charAt(0).toUpperCase()}
+              </div>
+              <span class="font-semibold text-slate-800 text-sm">${m.name || 'Unknown'}</span>
+            </div>
+          </td>
+          <td class="px-3 md:px-4 py-3" data-label="Telegram">
+            ${m.telegramUsername ? `<a href="https://t.me/${m.telegramUsername.replace('@','')}" target="_blank" class="text-blue-600 text-xs md:text-sm"><i class="fab fa-telegram mr-1"></i>${m.telegramUsername}</a>` : '<span class="text-slate-400 text-xs">—</span>'}
+          </td>
+          <td class="px-3 md:px-4 py-3" data-label="WhatsApp">
+            ${m.whatsappNumber ? `<a href="https://wa.me/${m.whatsappNumber.replace(/[^0-9]/g,'')}" target="_blank" class="text-emerald-600 text-xs md:text-sm"><i class="fab fa-whatsapp mr-1"></i>${m.whatsappNumber}</a>` : '<span class="text-slate-400 text-xs">—</span>'}
+          </td>
+          <td class="px-3 md:px-4 py-3" data-label="Full Referral URL">
+            <div class="url-box" title="${fullRefUrl}">${fullRefUrl}</div>
+            ${refAdmin ? `<p class="text-[10px] text-slate-500 mt-1">${refAdmin.email}</p>` : ''}
+          </td>
+          <td class="px-3 md:px-4 py-3" data-label="TG Group">
+            ${tgLink ? `<a href="${tgLink}" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs font-medium inline-flex items-center gap-1 bg-blue-50 px-2 py-1 rounded max-w-[150px] truncate" title="${tgLink}"><i class="fab fa-telegram"></i> ${tgLink.replace('https://t.me/','@')}</a>` : '<span class="text-slate-400 text-xs italic">N/A</span>'}
+          </td>
+          <td class="px-3 md:px-4 py-3" data-label="Action">
+            <button onclick="deleteMember('${m.id}')" class="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-2 rounded-lg transition" title="Delete">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderStatsBreakdown() {
+      const container = document.getElementById('stats-admin-breakdown');
+      container.innerHTML = '';
+      
+      const data = masterAdminsList.map(a => ({
+        admin: a,
+        count: masterMembersList.filter(m => m.referredBy === a.customSlug).length
+      })).sort((a,b) => b.count - a.count);
+      
+      const maxCount = Math.max(...data.map(d => d.count), 1);
+      
+      data.forEach(d => {
+        const percentage = (d.count / maxCount) * 100;
+        const row = document.createElement('div');
+        row.innerHTML = `
+          <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+              <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                ${d.admin.email.charAt(0).toUpperCase()}
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="font-semibold text-slate-800 text-xs md:text-sm truncate">${d.admin.email}</p>
+                <p class="text-xs text-slate-500">${d.admin.customSlug}</p>
+              </div>
+            </div>
+            <span class="font-bold text-slate-800 text-base md:text-lg">${d.count}</span>
+          </div>
+          <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-700" style="width: ${percentage}%"></div>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    document.getElementById('master-export-all-btn').addEventListener('click', () => {
+      exportToExcel(masterMembersList, `All_Members_${new Date().toLocaleDateString()}`);
+    });
+
+    function exportToExcel(data, filename) {
+      if (!data.length) return showToast('কোনো data নেই', 'error');
+      const ws_data = [['Name', 'Telegram', 'WhatsApp', 'Referred By', 'TG Group Joined', 'Joined At']];
+      data.forEach(m => {
+        const dateStr = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleString() : new Date(m.createdAt || 0).toLocaleString();
+        const tgLink = getTgLinkForMember(m);
+        ws_data.push([m.name || '', m.telegramUsername || '', m.whatsappNumber || '', m.referredBy || '', tgLink || '', dateStr]);
+      });
+      const ws = XLSX.utils.aoa_to_sheet(ws_data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Data");
+      XLSX.writeFile(wb, `${filename}.xlsx`);
+      showToast('Excel exported!');
+    }
+  </script>
 </body>
 </html>
