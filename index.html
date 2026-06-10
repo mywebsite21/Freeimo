@@ -146,18 +146,6 @@
       font-size: 24px;
     }
     
-    .link-display {
-      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-      border: 2px dashed #cbd5e1;
-      font-family: 'Courier New', monospace;
-      font-size: 11px;
-      word-break: break-all;
-      color: #6366f1;
-      font-weight: 600;
-      padding: 8px;
-      border-radius: 6px;
-    }
-    
     .scroll-custom::-webkit-scrollbar { width: 8px; height: 8px; }
     .scroll-custom::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
     .scroll-custom::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -217,17 +205,42 @@
     .mobile-actions-menu button:first-child { border-radius: 12px 12px 0 0; }
     .mobile-actions-menu button:last-child { border-radius: 0 0 12px 12px; }
     
-    .url-box {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: 6px;
-      padding: 6px 10px;
+    .referral-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 12px;
+      transition: all 0.3s;
+    }
+    .referral-card:hover {
+      border-color: #8b5cf6;
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
+    }
+    
+    .url-display {
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 12px;
       font-family: 'Courier New', monospace;
       font-size: 11px;
-      color: #0369a1;
+      color: #6366f1;
       word-break: break-all;
-      display: block;
-      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .email-display {
+      background: #fef3c7;
+      border: 1px solid #fbbf24;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #92400e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     
     @media (max-width: 1023px) {
@@ -618,11 +631,10 @@
               <table class="table-modern min-w-full">
                 <thead>
                   <tr>
-                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Admin</th>
-                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Full Referral URL</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Admin Info</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Referral Link</th>
                     <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Status</th>
-                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Search</th>
-                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Link Edit</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Permissions</th>
                     <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Actions</th>
                   </tr>
                 </thead>
@@ -653,7 +665,7 @@
                     <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Member</th>
                     <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Telegram</th>
                     <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">WhatsApp</th>
-                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Full Referral URL</th>
+                    <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Referred By</th>
                     <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">TG Group</th>
                     <th class="px-3 md:px-4 py-3 text-left text-xs text-slate-600 uppercase">Action</th>
                   </tr>
@@ -734,7 +746,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAwS7AZewx0L8KRGeFXB7Jq4BJEbSB0xO0",
@@ -759,7 +771,7 @@
     let masterMembersList = [];
     let adminTelegramMap = {};
     let currentModalSlug = null;
-    let isProcessingAuth = false; // ✅ Prevents race conditions
+    let isProcessingAuth = false;
 
     function showToast(message, type = 'success') {
       const toast = document.createElement('div');
@@ -826,7 +838,7 @@
     });
 
     async function handleAuth(isRegister) {
-      if (isProcessingAuth) return; // ✅ Prevent double-click
+      if (isProcessingAuth) return;
       
       const email = document.getElementById('email').value.trim().toLowerCase();
       const pass = document.getElementById('password').value;
@@ -835,7 +847,7 @@
       if (pass.length < 6) return showToast('Password কমপক্ষে ৬ অক্ষরের হতে হবে', 'error');
       
       if (isMasterLoginMode && email !== MASTER_ADMIN_EMAIL) {
-        return showToast(`❌ Master Admin access denied!\nOnly ${MASTER_ADMIN_EMAIL} can login as Master Admin.`, 'error');
+        return showToast(`❌ Master Admin access denied!`, 'error');
       }
 
       const btn = document.getElementById(isRegister ? 'register-btn' : 'login-btn');
@@ -849,12 +861,8 @@
         if (isRegister) {
           userCred = await createUserWithEmailAndPassword(auth, email, pass);
           
-          // ✅ Create admin doc immediately during registration
           const adminRef = doc(db, 'admins', userCred.user.uid);
-          let newSlug = generateUniqueSlug(email);
-          while (await isSlugExists(newSlug)) {
-            newSlug = generateUniqueSlug(email);
-          }
+          const newSlug = generateUniqueSlug(email);
           
           await setDoc(adminRef, {
             email: email,
@@ -868,17 +876,15 @@
             createdAt: new Date()
           });
           
-          // ✅ Sign out immediately and show pending banner
           await signOut(auth);
           isProcessingAuth = false;
           btn.disabled = false;
           btn.innerHTML = originalHTML;
           
-          // Show pending banner on login page
           document.getElementById('pending-banner').classList.remove('hidden');
           document.getElementById('login-form').reset();
           showToast('রেজিস্ট্রেশন সফল! অ্যাপ্রুভালের জন্য অপেক্ষা করুন।', 'success');
-          return; // ✅ Exit early - don't let onAuthStateChanged handle it
+          return;
           
         } else {
           userCred = await signInWithEmailAndPassword(auth, email, pass);
@@ -891,7 +897,7 @@
       } catch (err) {
         if(err.code === 'auth/invalid-credential') showToast('ভুল email অথবা password', 'error');
         else if(err.code === 'auth/email-already-in-use') showToast('এই email দিয়ে আগেই account আছে', 'error');
-        else if(err.code === 'auth/network-request-failed') showToast('নেটওয়ার্ক সমস্যা! আবার চেষ্টা করুন।', 'error');
+        else if(err.code === 'auth/network-request-failed') showToast('নেটওয়ার্ক সমস্যা!', 'error');
         else showToast(err.message || 'একটি সমস্যা হয়েছে', 'error');
       } finally {
         btn.disabled = false;
@@ -912,18 +918,7 @@
       }
     }));
 
-    async function isSlugExists(slug) {
-      try {
-        const q = query(collection(db, 'admins'), where('customSlug', '==', slug));
-        const snapshot = await getDocs(q);
-        return !snapshot.empty;
-      } catch(e) {
-        return false;
-      }
-    }
-
     onAuthStateChanged(auth, async (user) => {
-      // ✅ Skip if we just registered (handled in handleAuth)
       if (isProcessingAuth) return;
       
       if (user) {
@@ -933,35 +928,9 @@
           
           if (snap.exists()) {
             currentAdminDoc = { id: user.uid, ...snap.data() };
-            
-            // Ensure slug exists
-            if (!currentAdminDoc.customSlug || currentAdminDoc.customSlug.length < 10) {
-              let newSlug = generateUniqueSlug(user.email);
-              while (await isSlugExists(newSlug)) {
-                newSlug = generateUniqueSlug(user.email);
-              }
-              currentAdminDoc.customSlug = newSlug;
-              await updateDoc(adminRef, { customSlug: newSlug });
-            }
-            
-            if (currentAdminDoc.canSearchAll === undefined) {
-              currentAdminDoc.canSearchAll = false;
-              await updateDoc(adminRef, { canSearchAll: false });
-            }
-            
-            if (currentAdminDoc.canChangeTelegramLink === undefined) {
-              currentAdminDoc.canChangeTelegramLink = false;
-              await updateDoc(adminRef, { canChangeTelegramLink: false });
-            }
-            
           } else {
-            // ✅ Doc doesn't exist - create it (for master admin or edge cases)
-            let newSlug = generateUniqueSlug(user.email);
-            while (await isSlugExists(newSlug)) {
-              newSlug = generateUniqueSlug(user.email);
-            }
-            
             const isMaster = (user.email.toLowerCase() === MASTER_ADMIN_EMAIL);
+            const newSlug = generateUniqueSlug(user.email);
             
             currentAdminDoc = {
               id: user.uid, 
@@ -978,10 +947,9 @@
             await setDoc(adminRef, currentAdminDoc);
           }
 
-          // ✅ Check permissions for normal admins
           if (currentAdminDoc.role !== 'master') {
             if (!currentAdminDoc.isApproved) {
-              showToast('আপনার account এখনও Approved হয়নি। Master Admin কে জানান।', 'error');
+              showToast('আপনার account এখনও Approved হয়নি।', 'error');
               await signOut(auth);
               showView('login-view');
               document.getElementById('pending-banner').classList.remove('hidden');
@@ -997,7 +965,6 @@
             }
           }
 
-          // ✅ Route to correct dashboard
           if (currentAdminDoc.role === 'master') {
             showView('master-dashboard-view');
             document.getElementById('master-email').innerText = user.email;
@@ -1010,26 +977,23 @@
           
         } catch (err) {
           console.error('Auth state error:', err);
-          showToast('ড্যাশবোর্ড লোড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'error');
+          showToast('ড্যাশবোর্ড লোড করতে সমস্যা হয়েছে।', 'error');
           await signOut(auth).catch(() => {});
           showView('login-view');
           currentAdminDoc = null;
         }
         
       } else {
-        // ✅ User signed out - always show login
         showView('login-view');
         document.getElementById('login-form').reset();
         currentAdminDoc = null;
       }
     });
 
-    // ✅ REFRESH BUTTONS
     document.getElementById('normal-refresh-btn').addEventListener('click', async () => {
       const icon = document.getElementById('normal-refresh-icon');
       icon.classList.add('refresh-spin');
       try {
-        // Reload admin doc for latest permissions
         const snap = await getDoc(doc(db, 'admins', currentAdminDoc.id));
         if (snap.exists()) {
           currentAdminDoc = { id: currentAdminDoc.id, ...snap.data() };
@@ -1111,7 +1075,7 @@
         if (currentAdminDoc.canSearchAll === true) {
           snapshot = await getDocs(collection(db, 'members'));
         } else {
-          const q = query(collection(db, 'members'), where('referredBy', '==', mySlug));
+          const q = collection(db, 'members');
           snapshot = await getDocs(q);
         }
         
@@ -1286,9 +1250,18 @@
       } catch(e) { showToast('Error: ' + e.message, 'error'); }
     };
 
+    window.deleteAdmin = async function(uid, email) {
+      if(!confirm(`⚠️ এই অ্যাডমিনকে ডিলিট করবেন?\n\nEmail: ${email}\n\nএই কাজটি ফিরিয়ে আনা যাবে না!`)) return;
+      try {
+        await deleteDoc(doc(db, 'admins', uid));
+        showToast('Admin deleted successfully!');
+        loadMasterData();
+      } catch(e) { showToast('Error: ' + e.message, 'error'); }
+    };
+
     window.toggleSearchPerm = async function(uid, canSearchAll) {
       const action = !canSearchAll ? 'GRANT Global Search' : 'REVOKE Global Search';
-      if(!confirm(`আপনি কি এই অ্যাডমিনকে ${action} permission দিতে চান?\n\n⚠️ Global Search দিলে সে সব অ্যাডমিনের মেম্বার দেখতে পারবে!`)) return;
+      if(!confirm(`আপনি কি এই অ্যাডমিনকে ${action} permission দিতে চান?`)) return;
       try {
         await updateDoc(doc(db, 'admins', uid), { canSearchAll: !canSearchAll });
         showToast(`Search ${!canSearchAll ? 'Granted' : 'Revoked'}!`);
@@ -1410,29 +1383,38 @@
         const tr = document.createElement('tr');
         
         const approvalBadge = a.isApproved 
-          ? '<span class="badge-pill bg-emerald-100 text-emerald-700"><i class="fas fa-check"></i> <span class="hidden sm:inline">Approved</span></span>'
-          : '<span class="badge-pill bg-amber-100 text-amber-700"><i class="fas fa-clock"></i> <span class="hidden sm:inline">Pending</span></span>';
+          ? '<span class="badge-pill bg-emerald-100 text-emerald-700"><i class="fas fa-check"></i> Approved</span>'
+          : '<span class="badge-pill bg-amber-100 text-amber-700"><i class="fas fa-clock"></i> Pending</span>';
         
         const blockBadge = a.isBlocked
-          ? '<span class="badge-pill bg-rose-100 text-rose-700"><i class="fas fa-ban"></i> <span class="hidden sm:inline">Blocked</span></span>'
-          : '<span class="badge-pill bg-slate-100 text-slate-600"><i class="fas fa-check"></i> <span class="hidden sm:inline">Active</span></span>';
+          ? '<span class="badge-pill bg-rose-100 text-rose-700"><i class="fas fa-ban"></i> Blocked</span>'
+          : '<span class="badge-pill bg-slate-100 text-slate-600"><i class="fas fa-check"></i> Active</span>';
         
         const uniqueMenuId = `actions-menu-${index}`;
         
         tr.innerHTML = `
-          <td class="px-3 md:px-4 py-4" data-label="Admin">
+          <td class="px-3 md:px-4 py-4" data-label="Admin Info">
             <div class="flex items-center gap-2 md:gap-3">
               <div class="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                 ${a.email.charAt(0).toUpperCase()}
               </div>
               <div class="min-w-0">
-                <p class="font-bold text-slate-800 text-xs md:text-sm truncate">${a.email}</p>
+                <div class="email-display mb-2">
+                  <i class="fas fa-envelope text-amber-600"></i>
+                  <span class="font-semibold truncate">${a.email}</span>
+                </div>
                 <p class="text-xs text-slate-500"><i class="fas fa-users mr-1"></i>${membersCount} members</p>
               </div>
             </div>
           </td>
-          <td class="px-3 md:px-4 py-4" data-label="Full Referral URL">
-            <div class="url-box" title="${fullLink}">${fullLink}</div>
+          <td class="px-3 md:px-4 py-4" data-label="Referral Link">
+            <div class="referral-card">
+              <div class="url-display mb-2">
+                <i class="fas fa-link text-indigo-600 flex-shrink-0"></i>
+                <span class="flex-1 truncate">${fullLink}</span>
+              </div>
+              <p class="text-[10px] text-slate-500">Slug: <code class="bg-slate-200 px-1 rounded">${a.customSlug}</code></p>
+            </div>
           </td>
           <td class="px-3 md:px-4 py-4" data-label="Status">
             <div class="flex flex-col gap-1">
@@ -1440,15 +1422,15 @@
               ${blockBadge}
             </div>
           </td>
-          <td class="px-3 md:px-4 py-4" data-label="Search">
-            <button onclick="toggleSearchPerm('${a.id}', ${a.canSearchAll || false})" class="text-xs font-semibold px-3 py-1.5 rounded-lg transition ${a.canSearchAll ? 'bg-rose-100 text-rose-700 hover:bg-rose-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
-              <i class="fas fa-${a.canSearchAll ? 'globe' : 'lock'} mr-1"></i>${a.canSearchAll ? 'Global' : 'Own'}
-            </button>
-          </td>
-          <td class="px-3 md:px-4 py-4" data-label="Link Edit">
-            <button onclick="toggleLinkEditPerm('${a.id}', ${a.canChangeTelegramLink || false})" class="text-xs font-semibold px-3 py-1.5 rounded-lg transition ${a.canChangeTelegramLink ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
-              <i class="fas fa-${a.canChangeTelegramLink ? 'edit' : 'lock'} mr-1"></i>${a.canChangeTelegramLink ? 'On' : 'Off'}
-            </button>
+          <td class="px-3 md:px-4 py-4" data-label="Permissions">
+            <div class="flex flex-col gap-2">
+              <button onclick="toggleSearchPerm('${a.id}', ${a.canSearchAll || false})" class="text-xs font-semibold px-3 py-1.5 rounded-lg transition ${a.canSearchAll ? 'bg-rose-100 text-rose-700 hover:bg-rose-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                <i class="fas fa-${a.canSearchAll ? 'globe' : 'lock'} mr-1"></i>Search: ${a.canSearchAll ? 'Global' : 'Own'}
+              </button>
+              <button onclick="toggleLinkEditPerm('${a.id}', ${a.canChangeTelegramLink || false})" class="text-xs font-semibold px-3 py-1.5 rounded-lg transition ${a.canChangeTelegramLink ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">
+                <i class="fas fa-${a.canChangeTelegramLink ? 'edit' : 'lock'} mr-1"></i>Link Edit: ${a.canChangeTelegramLink ? 'On' : 'Off'}
+              </button>
+            </div>
           </td>
           <td class="px-3 md:px-4 py-4" data-label="Actions">
             <div class="hidden md:flex flex-wrap gap-1">
@@ -1460,6 +1442,9 @@
               </button>
               <button onclick="toggleAdminBlock('${a.id}', ${a.isBlocked || false})" class="text-xs font-semibold ${a.isBlocked ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'} text-white px-3 py-1.5 rounded-lg transition">
                 <i class="fas fa-${a.isBlocked ? 'unlock' : 'ban'} mr-1"></i>${a.isBlocked ? 'Unblock' : 'Block'}
+              </button>
+              <button onclick="deleteAdmin('${a.id}', '${a.email}')" class="text-xs font-semibold bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg transition">
+                <i class="fas fa-trash mr-1"></i>Delete
               </button>
               <button onclick="exportAdminMembers('${a.customSlug}')" class="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg transition">
                 <i class="fas fa-download"></i>
@@ -1478,6 +1463,9 @@
                 </button>
                 <button onclick="toggleAdminBlock('${a.id}', ${a.isBlocked || false}); document.getElementById('${uniqueMenuId}').classList.remove('show')" class="${a.isBlocked ? 'text-emerald-600' : 'text-rose-600'}">
                   <i class="fas fa-${a.isBlocked ? 'unlock' : 'ban'} mr-2"></i>${a.isBlocked ? 'Unblock' : 'Block'}
+                </button>
+                <button onclick="deleteAdmin('${a.id}', '${a.email}'); document.getElementById('${uniqueMenuId}').classList.remove('show')" class="text-red-600 border-t border-slate-200 mt-1 pt-2">
+                  <i class="fas fa-trash mr-2"></i>Delete Admin
                 </button>
                 <button onclick="exportAdminMembers('${a.customSlug}'); document.getElementById('${uniqueMenuId}').classList.remove('show')" class="text-slate-600 border-t border-slate-200 mt-1 pt-2">
                   <i class="fas fa-download mr-2"></i>Export Data
@@ -1508,7 +1496,6 @@
         const dateStr = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleDateString('bn-BD') : new Date(m.createdAt || 0).toLocaleDateString();
         const tgLink = getTgLinkForMember(m);
         const refAdmin = masterAdminsList.find(a => a.customSlug === m.referredBy);
-        const fullRefUrl = `https://golpoghor9.blogspot.com/?ref=${m.referredBy || 'unknown'}`;
         
         tr.innerHTML = `
           <td class="px-3 md:px-4 py-3" data-label="Member">
@@ -1525,9 +1512,9 @@
           <td class="px-3 md:px-4 py-3" data-label="WhatsApp">
             ${m.whatsappNumber ? `<a href="https://wa.me/${m.whatsappNumber.replace(/[^0-9]/g,'')}" target="_blank" class="text-emerald-600 text-xs md:text-sm"><i class="fab fa-whatsapp mr-1"></i>${m.whatsappNumber}</a>` : '<span class="text-slate-400 text-xs">—</span>'}
           </td>
-          <td class="px-3 md:px-4 py-3" data-label="Full Referral URL">
-            <div class="url-box" title="${fullRefUrl}">${fullRefUrl}</div>
-            ${refAdmin ? `<p class="text-[10px] text-slate-500 mt-1">${refAdmin.email}</p>` : ''}
+          <td class="px-3 md:px-4 py-3" data-label="Referred By">
+            ${refAdmin ? `<p class="text-xs font-semibold text-slate-800">${refAdmin.email}</p>` : '<p class="text-xs text-slate-400">Unknown</p>'}
+            <p class="text-[10px] text-slate-500 mt-1">Slug: ${m.referredBy || 'N/A'}</p>
           </td>
           <td class="px-3 md:px-4 py-3" data-label="TG Group">
             ${tgLink ? `<a href="${tgLink}" target="_blank" class="text-blue-600 hover:text-blue-800 text-xs font-medium inline-flex items-center gap-1 bg-blue-50 px-2 py-1 rounded max-w-[150px] truncate" title="${tgLink}"><i class="fab fa-telegram"></i> ${tgLink.replace('https://t.me/','@')}</a>` : '<span class="text-slate-400 text-xs italic">N/A</span>'}
