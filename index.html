@@ -744,9 +744,10 @@
   </div>
 
   <script type="module">
+    // ইমপোর্টে query এবং where অ্যাড করা হয়েছে
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAwS7AZewx0L8KRGeFXB7Jq4BJEbSB0xO0",
@@ -1067,6 +1068,7 @@
       btn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Changes';
     });
 
+    // এখানে সিকিউরিটি ফিক্স করা হয়েছে: query এবং where ব্যবহার করে ডাটা ফেচ করা হচ্ছে
     async function loadNormalMembers() {
       try {
         let snapshot;
@@ -1075,7 +1077,8 @@
         if (currentAdminDoc.canSearchAll === true) {
           snapshot = await getDocs(collection(db, 'members'));
         } else {
-          const q = collection(db, 'members');
+          // শুধু নিজের মেম্বারদের ডাটাবেস থেকে কল করবে
+          const q = query(collection(db, 'members'), where('referredBy', '==', mySlug));
           snapshot = await getDocs(q);
         }
         
